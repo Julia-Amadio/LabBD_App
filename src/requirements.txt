@@ -1,6 +1,0 @@
-streamlit
-pymongo
-pandas
-numpy
-neo4j
-mysql.connector.python
