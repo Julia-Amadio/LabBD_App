@@ -16,7 +16,7 @@ with st.form("form_usuario"):
     cor = st.selectbox("Selecione uma cor:", ["Vermelho", "Amarelo", "Azul"])
     submit = st.form_submit_button("Enviar")
 
-st.write(st.secrets["db_name"])
+#st.write(st.secrets["db_name"])
 
 def validar(nome, senha):
     if nome =="" or senha=="":

@@ -1,0 +1,52 @@
+id;titulo;descricao;cidade;estado;tipo_contratacao;salario;empresa;skills
+1;Desenvolvedor Frontend;Conduzir projetos de ciência de dados, desde a coleta e limpeza até a modelagem e visualização.;Rio Claro;SP;CLT; 9.020,00 ;Whirpool;AWS, Python, Scrum
+2;Scrum Master;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;São Paulo;CE;Estágio; 3.431,00 ;Unesp;React, Scrum, CI/CD, NoSQL, Java
+3;Administrador de Banco de Dados;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;Florianópolis;SC;CLT; 10.362,00 ;Cavalcanti;NoSQL, JavaScript, Scrum, HTML, Kanban, Tableau
+4;Cientista de Dados;Prestar suporte técnico a usuários, solucionando problemas de hardware e software.;Recife;PE;Estágio; 14.653,00 ;Campos S.A.;Tableau, JavaScript, Power BI
+5;Desenvolvedor Fullstack;Projetar e treinar modelos de machine learning para resolver problemas complexos de negócio.;Florianópolis;SC;Temporário; 5.740,00 ;Ramos - ME;React, HTML, SQL, Python, Power BI, Git
+6;Especialista em Redes;Prestar suporte técnico a usuários, solucionando problemas de hardware e software.;Curitiba;PR;PJ; 7.875,00 ;da Paz Ramos S/A;Python, Spark, SQL, Power BI
+7;Infra TI;Desenvolver soluções em nuvem utilizando AWS, Azure ou GCP, garantindo escalabilidade e confiabilidade.;Salvador;BA;Temporário; 11.742,00 ;Azevedo;Docker, Azure, GCP
+8;Desenvolvedor Fullstack;Administrar e otimizar bancos de dados relacionais e não relacionais, garantindo disponibilidade.;Brasília;DF;Estágio; 12.515,00 ;Ramos Araújo - EI;Linux, CI/CD, AWS, SQL, Docker, Scrum
+9;Desenvolvedor Backend;Coordenar equipes de desenvolvimento, assegurando a entrega de projetos no prazo e orçamento.;Rio de Janeiro;RJ;Estágio; 6.835,00 ;Peixoto;Spark, HTML, Tableau, Hadoop, Node.js, GCP
+10;Arquiteto de Soluções;Administrar e otimizar bancos de dados relacionais e não relacionais, garantindo disponibilidade.;Florianópolis;SC;PJ; 3.493,00 ;Nogueira;Git, Azure, Scrum
+11;Especialista em Cloud Computing;Coordenar equipes de desenvolvimento, assegurando a entrega de projetos no prazo e orçamento.;Florianópolis;SC;Temporário; 10.707,00 ;Porto - ME;Scrum, JavaScript, Hadoop, GCP
+12;Cientista de Dados;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;Fortaleza;CE;Temporário; 4.106,00 ;Duarte Silveira Ltda.;JavaScript, Hadoop, Node.js, Power BI
+13;Cientista de Dados;Desenvolver soluções em nuvem utilizando AWS, Azure ou GCP, garantindo escalabilidade e confiabilidade.;Curitiba;PR;Temporário; 8.034,00 ;Costela Ltda.;CI/CD, AWS, NoSQL, Kanban, SQL, Linux
+14;Engenheiro DevOps;Responsável por desenvolver e manter aplicações escaláveis, garantindo alta performance e segurança.;Porto Alegre;RS;Estágio; 11.255,00 ;IBM Brasil;Docker, Kubernetes, Linux
+15;Designer de UX/UI;Projetar e treinar modelos de machine learning para resolver problemas complexos de negócio.;Florianópolis;SC;PJ; 8.110,00 ;IBM Brasil;React, AWS, CI/CD, Java, SQL
+16;Arquiteto de Soluções;Administrar e otimizar bancos de dados relacionais e não relacionais, garantindo disponibilidade.;Recife;PE;Temporário; 10.633,00 ;TOTVS;Tableau, Python, SQL, Scrum
+17;Analista de Sistemas;Administrar e otimizar bancos de dados relacionais e não relacionais, garantindo disponibilidade.;Salvador;BA;Estágio; 9.535,00 ;IBM Brasil;SQL, NoSQL, HTML, Python, GCP, Power BI
+18;Product Owner;Administrar e otimizar bancos de dados relacionais e não relacionais, garantindo disponibilidade.;Salvador;BA;PJ; 8.160,00 ;IBM Brasil;CSS, Docker, Spark, React, Python, AWS
+19;Engenheiro DevOps;Desenvolver soluções em nuvem utilizando AWS, Azure ou GCP, garantindo escalabilidade e confiabilidade.;Rio Claro;CE;CLT; 7.634,00 ;Whirpool;Spark, Hadoop, GCP, Git
+20;Designer de UX/UI;Atuar na análise, modelagem e otimização de processos de dados, criando pipelines eficientes.;Fortaleza;CE;Temporário; 4.757,00 ;TOTVS;Power BI, Spark, JavaScript, NoSQL, Java, Azure
+21;Administrador de Banco de Dados;Atuar na análise, modelagem e otimização de processos de dados, criando pipelines eficientes.;Porto Alegre;RS;Temporário; 3.599,00 ;IBM Brasil;AWS, React, Spark
+22;Especialista em Redes;Desenvolver soluções em nuvem utilizando AWS, Azure ou GCP, garantindo escalabilidade e confiabilidade.;Fortaleza;CE;Estágio; 8.036,00 ;TOTVS;Scrum, Hadoop, Azure
+23;Engenheiro de Machine Learning;Coordenar equipes de desenvolvimento, assegurando a entrega de projetos no prazo e orçamento.;Florianópolis;SC;PJ; 11.317,00 ;TOTVS;Docker, React, Python, Tableau
+24;Desenvolvedor Backend;Administrar e otimizar bancos de dados relacionais e não relacionais, garantindo disponibilidade.;Fortaleza;CE;Estágio; 11.004,00 ;Amazon Brasil;Kubernetes, Hadoop, HTML
+25;Engenheiro DevOps;Desenvolver interfaces intuitivas e responsivas, focadas na melhor experiência do usuário.;Curitiba;PR;CLT; 4.181,00 ;IBM Brasil;Spark, Azure, HTML, Tableau, Kanban
+26;Especialista em Cloud Computing;Prestar suporte técnico a usuários, solucionando problemas de hardware e software.;São Paulo;SP;Estágio; 3.145,00 ;IBM Brasil;Git, Power BI, Kubernetes, SQL
+27;Analista de BI;Desenvolver interfaces intuitivas e responsivas, focadas na melhor experiência do usuário.;Florianópolis;SC;Temporário; 12.205,00 ;IBM Brasil;CSS, NoSQL, HTML, Linux, Node.js
+28;Analista de Qualidade de Software;Administrar e otimizar bancos de dados relacionais e não relacionais, garantindo disponibilidade.;Recife;PE;Estágio; 6.988,00 ;IBM Brasil;Node.js, Python, Java
+29;Arquiteto de Soluções;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;Florianópolis;SC;PJ; 12.254,00 ;Itaú Unibanco;Docker, AWS, JavaScript, GCP
+30;Infra TI;Projetar e treinar modelos de machine learning para resolver problemas complexos de negócio.;Belo Horizonte;MG;Temporário; 9.240,00 ;Microsoft Brasil;CI/CD, Hadoop, Java, Node.js, Azure, Kubernetes
+31;Engenheiro DevOps;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;Florianópolis;SC;Estágio; 14.940,00 ;Globo.com;JavaScript, NoSQL, CSS
+32;Arquiteto de Soluções;Atuar na análise, modelagem e otimização de processos de dados, criando pipelines eficientes.;Recife;PE;Temporário; 12.733,00 ;Google Brasil;Kubernetes, Java, Azure, Spark
+33;Arquiteto de Soluções;Desenvolver interfaces intuitivas e responsivas, focadas na melhor experiência do usuário.;Porto Alegre;RS;CLT; 9.882,00 ;Petrobras;Hadoop, Power BI, React
+34;Desenvolvedor Fullstack;Administrar e otimizar bancos de dados relacionais e não relacionais, garantindo disponibilidade.;Rio de Janeiro;RJ;Temporário; 8.892,00 ;Ferreira;JavaScript, AWS, Node.js, Kubernetes
+35;Administrador de Banco de Dados;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;São Paulo;SP;Temporário; 7.605,00 ;IBM Brasil;Linux, Node.js, Kanban, SQL, Java
+36;Desenvolvedor Backend;Responsável por desenvolver e manter aplicações escaláveis, garantindo alta performance e segurança.;Belo Horizonte;MG;PJ; 3.396,00 ;TOTVS;Spark, Docker, SQL, CI/CD, Kubernetes, Scrum
+37;Especialista em Redes;Responsável por desenvolver e manter aplicações escaláveis, garantindo alta performance e segurança.;Recife;PE;Estágio; 7.866,00 ;Petrobras;React, Tableau, Azure, Scrum
+38;Especialista em Redes;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;São Paulo;SP;Temporário; 4.913,00 ;IBM Brasil;HTML, Node.js, Scrum
+39;Analista de Suporte Técnico;Administrar e otimizar bancos de dados relacionais e não relacionais, garantindo disponibilidade.;Porto Alegre;RS;Temporário; 9.016,00 ;Microsoft Brasil;Docker, AWS, CSS, Power BI, Kubernetes
+40;Analista de BI;Coordenar equipes de desenvolvimento, assegurando a entrega de projetos no prazo e orçamento.;Belo Horizonte;MG;Estágio; 4.122,00 ;TOTVS;Spark, CI/CD, Java, Node.js, GCP, Azure
+41;Desenvolvedor Backend;Projetar e treinar modelos de machine learning para resolver problemas complexos de negócio.;Rio de Janeiro;RJ;CLT; 11.319,00 ;Amazon Brasil;Node.js, Kanban, Kubernetes, Tableau, SQL, Power BI
+42;Analista de BI;Conduzir projetos de ciência de dados, desde a coleta e limpeza até a modelagem e visualização.;Salvador;BA;Temporário; 14.391,00 ;Mercado Livre;Java, AWS, HTML, JavaScript, SQL
+43;Cientista de Dados;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;Florianópolis;SC;PJ; 14.156,00 ;Petrobras;Scrum, Hadoop, React, Azure, Linux, Tableau
+44;Engenheiro de Dados;Projetar e treinar modelos de machine learning para resolver problemas complexos de negócio.;Salvador;BA;CLT; 9.396,00 ;Globo.com;Scrum, Java, Python, React, Linux, Node.js
+45;Engenheiro de Machine Learning;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;Salvador;BA;CLT; 11.192,00 ;Globo.com;Python, Scrum, HTML
+46;Analista de BI;Desenvolver soluções em nuvem utilizando AWS, Azure ou GCP, garantindo escalabilidade e confiabilidade.;São Paulo;SP;Estágio; 13.471,00 ;Vale;SQL, React, AWS
+47;Especialista em Redes;Desenvolver soluções em nuvem utilizando AWS, Azure ou GCP, garantindo escalabilidade e confiabilidade.;Rio de Janeiro;RJ;Estágio; 11.234,00 ;Embraer;Linux, Tableau, Docker, AWS
+48;Analista de Suporte Técnico;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;Rio de Janeiro;RJ;PJ; 12.804,00 ;Gomes;GCP, React, AWS
+49;Engenheiro DevOps;Prestar suporte técnico a usuários, solucionando problemas de hardware e software.;Rio de Janeiro;RJ;PJ; 4.872,00 ;Campos Costa - EI;NoSQL, Docker, Linux, Python, Java, Hadoop
+50;Analista de Segurança da Informação;Implementar e monitorar práticas de segurança da informação, mitigando riscos cibernéticos.;Florianópolis;SC;Temporário; 10.136,00 ;Lopes S/A;Spark, Linux, Node.js, Git
+51;Engenheiro de Dados Pleno;Descrição xyz.;São Paulo;SP;CLT; 4.000,00 ;Empresa de Sei lá o que de Sei lá onde;Python, PowerBI, SQL, Java, JavaScript

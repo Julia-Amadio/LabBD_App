@@ -1,0 +1,36 @@
+#Ambientes Virtuais do Python ---
+#Nunca inclua o ambiente virtual no repositório!
+.venv/
+venv/
+env/
+.env/
+
+#Arquivos de Configuração Local (NÃO COMPARTILHAR) ---
+#Arquivo de variáveis de ambiente (contém segredos, chaves de API, etc.)
+.env
+
+#Configurações locais do Streamlit
+.streamlit/
+
+#Arquivos de Cache e Bytecode do Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+#Arquivos de Configuração de IDEs
+#IntelliJ IDEA
+.idea/
+*.iml
+#Visual Studio Code
+.vscode/
+
+#Arquivos de Sistema Operacional
+#macOS
+.DS_Store
+#Windows
+Thumbs.db
+desktop.ini
+
+#Arquivos de Log
+*.log
