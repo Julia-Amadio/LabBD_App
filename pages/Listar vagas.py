@@ -3,32 +3,32 @@ import pandas as pd
 import os
 
 
-# Carrega os dados
+#Carrega os dados
 @st.cache_data
 def load_vagas_data(file_path):
     """Carrega o DataFrame de vagas com o delimitador correto."""
     try:
-        # Separador é ponto e vírgula
+        #Separador é ponto e vírgula
         df = pd.read_csv(file_path, sep=';')
 
-        # Tira o R$ e troca , por . no salário, para ficar no padrão do pandas
+        #Tira o R$ e troca , por . no salário, para ficar no padrão do pandas
         df['salario_clean'] = df['salario'].astype(str).str.replace(r'[^\d,]', '', regex=True).str.replace(',', '.')
 
-        # Transforma o salario formatado em float (se tiver algum problema, deixa como NaN)
+        #Transforma o salario formatado em float (se tiver algum problema, deixa como NaN)
         df['salario_float'] = pd.to_numeric(df['salario_clean'], errors='coerce')
 
         return df
     except Exception as e:
         st.error(f"Erro ao carregar ou processar o arquivo CSV: {e}")
-        return pd.DataFrame()  # se tiver erro, retorna dataframe vazio
+        return pd.DataFrame()  #se tiver erro, retorna dataframe vazio
 
 
-# "main()"
+#"main()"
 
 st.set_page_config(
-    page_title="Vagas Abertas",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Listagem de vagas",
+    page_icon="💼",
+    layout="wide"
 )
 
 st.title("Lista de Vagas em Aberto")
@@ -41,7 +41,7 @@ if not os.path.exists(file_path):
     st.warning("Certifique-se de que o arquivo CSV está na mesma pasta que este script Streamlit.")
     st.stop()
 
-# Carrega os dados
+#Carrega os dados
 df_vagas = load_vagas_data(file_path)
 
 if df_vagas.empty:
@@ -50,17 +50,17 @@ if df_vagas.empty:
 
 st.info(f"O sistema encontrou um total de **{len(df_vagas)}** vagas abertas.")
 
-# Sidebar
+#Sidebar
 st.sidebar.header("Filtros de Vagas")
 search_query = st.sidebar.text_input("Buscar por Título/Descrição/Empresa/Cidade", "").lower()
 
 tipos_unicos = ['Todos'] + sorted(df_vagas['tipo_contratacao'].unique().tolist())
 tipo_selecionado = st.sidebar.selectbox("Tipo de Contratação", tipos_unicos)
 
-# Aplica os filtros
+#Aplica os filtros
 df_filtered = df_vagas.copy()
 
-# Filtro de busca textual
+#Filtro de busca textual
 if search_query:
     df_filtered = df_filtered[
         df_filtered['titulo'].str.lower().str.contains(search_query) |
@@ -69,7 +69,7 @@ if search_query:
         df_filtered['cidade'].str.lower().str.contains(search_query)
         ]
 
-# Filtro por tipo de contratação
+#Filtro por tipo de contratação
 if tipo_selecionado != 'Todos':
     df_filtered = df_filtered[df_filtered['tipo_contratacao'] == tipo_selecionado]
 

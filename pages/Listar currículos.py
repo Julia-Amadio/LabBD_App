@@ -2,27 +2,27 @@ import streamlit as st
 import pandas as pd
 import os
 
-
-# Carrega os dados
+#Carrega os dados
 @st.cache_data
 def load_curriculos_data(file_path):
     """Carrega o DataFrame de currículos com o delimitador correto."""
     try:
-        # Separador é ponto e vírgula
+        #Separador é ponto e vírgula
         df = pd.read_csv(file_path, sep=';')
 
         return df
     except Exception as e:
         st.error(f"Erro ao carregar ou processar o arquivo CSV: {e}")
-        return pd.DataFrame()  # se tiver erro, retorna dataframe vazio
+        return pd.DataFrame()  #se tiver erro, retorna dataframe vazio
 
 
-# "main()"
+#"main()"
 
+#Configuração da Página
 st.set_page_config(
-    page_title="Currículos",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    page_title="Listagem de currículos",
+    page_icon="📜",
+    layout="wide"
 )
 
 st.title("Lista de Currículos")
@@ -35,7 +35,7 @@ if not os.path.exists(file_path):
     st.warning("Certifique-se de que o arquivo CSV está na mesma pasta que este script Streamlit.")
     st.stop()
 
-# Carrega os dados
+#Carrega os dados
 df_curriculos = load_curriculos_data(file_path)
 
 if df_curriculos.empty:
@@ -44,14 +44,14 @@ if df_curriculos.empty:
 
 st.info(f"O sistema encontrou um total de **{len(df_curriculos)}** currículos.")
 
-# Sidebar
+#Sidebar
 st.sidebar.header("Filtros de Currículos")
 search_query = st.sidebar.text_input("Buscar por Formação/Experiência/Skill/Idioma", "").lower()
 
-# Aplica os filtros
+#Aplica os filtros
 df_filtered = df_curriculos.copy()
 
-# Filtro de busca textual
+#Filtro de busca textual
 if search_query:
     df_filtered = df_filtered[
         df_filtered['formacao'].str.lower().str.contains(search_query) |
@@ -68,11 +68,11 @@ if df_filtered.empty:
     st.stop()
 
 
-# De fato mostrar os curriculos
+#De fato mostrar os curriculos
 
-# For para filtrar os curriculos
+#For para filtrar os curriculos
 for index, row in df_filtered.iterrows():
-    # Título do expander: Nome | Formação
+    #Título do expander: Nome | Formação
     title = f"**{row['nome']}** - **{row['formacao']}**"
 
     with st.expander(title):

@@ -5,7 +5,7 @@ import streamlit_shadcn_ui as st_shadcn
 
 #Configuração da Página
 st.set_page_config(
-    page_title="Cadastro de Currículo",
+    page_title="Cadastro de currículos",
     page_icon="👤",
     layout="wide"
 )
