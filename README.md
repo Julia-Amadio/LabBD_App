@@ -6,17 +6,17 @@ Este repositório contém o código-fonte de um aplicativo web para gerenciament
 
 Os dados cadastrados em um ambiente de deploy (como o Streamlit Community Cloud) são efêmeros e serão perdidos sempre que a aplicação "dormir" ou for reiniciada. A próxima etapa do projeto é conectar este frontend a um banco de dados persistente (MySQL, MongoDB, Neo4j).
 
-### 🌐 Deploy do projeto
+## 🌐 Deploy do projeto
 Este projeto está hospedado na URL https://fakelinkedinlabbd.streamlit.app/
 
-### ✨ Funcionalidades Atuais
+## ✨ Funcionalidades Atuais
 - Autenticação de Usuário: Sistema de cadastro e login (atualmente validando contra o usuarios.csv).
 - Cadastro de Vagas: Formulário para submissão de novas vagas de emprego.
 - Cadastro de Currículos: Formulário para submissão de currículos, incluindo uma máscara de input (+XX XX 9XXXX-XXXX) para o campo de telefone.
 - Visualização de Dados: Uma página protegida que exibe tabelas com todas as vagas e currículos cadastrados.
 - Navegação Multi-Página: Estrutura de aplicação Streamlit com uma página principal de login (app.py) e páginas de funcionalidades (pages/).
 
-### 🚀 Como Executar Localmente
+## 🚀 Como Executar Localmente
 Para testar a aplicação em sua máquina local, siga os passos abaixo.
 
 **Pré-requisitos:** Python 3.8+, Git.
@@ -55,7 +55,6 @@ Para testar a aplicação em sua máquina local, siga os passos abaixo.
     ```
 6. Acesse o app abrindo o endereço http://localhost:8501 no seu navegador.
 
-
-### 👩‍💻 Autores
+## 👩‍💻 Autores
 - Julia Amadio
 - João Bastasini
