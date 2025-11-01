@@ -1,4 +1,4 @@
-## LabBD App: Sistema de Gerenciamento de Vagas e Currículos
+## LabBD_App: Sistema de Gerenciamento de Vagas e Currículos
 
 Este repositório contém o código-fonte de um aplicativo web para gerenciamento de vagas de emprego e currículos, desenvolvido como projeto para a disciplina de Laboratório de Banco de Dados. A aplicação é construída em Python usando a biblioteca Streamlit.
 
@@ -7,7 +7,7 @@ Este repositório contém o código-fonte de um aplicativo web para gerenciament
 Os dados cadastrados em um ambiente de deploy (como o Streamlit Community Cloud) são efêmeros e serão perdidos sempre que a aplicação "dormir" ou for reiniciada. A próxima etapa do projeto é conectar este frontend a um banco de dados persistente (MySQL, MongoDB, Neo4j).
 
 ## 🌐 Deploy do projeto
-Este projeto está hospedado na URL https://fakelinkedinlabbd.streamlit.app/
+O deploy foi feito por meio da Streamlit Community Cloud. Este projeto está hospedado na URL https://fakelinkedinlabbd.streamlit.app/.
 
 ## ✨ Funcionalidades Atuais
 - Autenticação de Usuário: Sistema de cadastro e login (atualmente validando contra o usuarios.csv).
