@@ -1,119 +1,112 @@
 import streamlit as st
-import pandas as pd
-import os
+from db_connection import get_collections, create_embedding  #Importa nossas novas funções
+from pymongo.errors import PyMongoError
+import datetime
 
-#Configuração da página
+#Config da página
 st.set_page_config(
-    page_title="Cadastro de Vagas",
+    page_title="Cadastro de vagas",
     page_icon="🚀",
     layout="wide"
 )
 
-st.title("🚀 Cadastro de Nova Vaga")
-st.write("Preencha o formulário abaixo para adicionar uma nova vaga ao sistema.")
+st.title("🚀 Cadastro de nova Vaga (com Embeddings)")
+st.write("Preencha o formulário abaixo para adicionar uma nova vaga ao banco de dados.")
+st.write("Caso a cota de requisições do Google AI Studio tenha sido excedida, o Embedding não será gerado e a Vaga será salva SEM a função de busca por IA.")
 
-#Constantes
-VAGAS_CSV_PATH = "vagas.csv"
+#Constantes de opções
+TIPOS_CONTRATACAO = ["CLT", "PJ", "Estágio", "Temporário"]
 
-
-#Funções Auxiliares
-def load_data(filepath, sep=';'):
-    """Carrega os dados do CSV. Se o arquivo não existir, cria um DataFrame vazio com as colunas."""
-    if os.path.exists(filepath):
-        try:
-            return pd.read_csv(filepath, sep=sep)
-        except pd.errors.EmptyDataError:
-            # Se o arquivo estiver vazio, mas existir
-            pass
-
-    #Colunas esperadas se o arquivo não existir ou estiver vazio
-    columns = [
-        'id', 'titulo', 'descricao', 'cidade', 'estado',
-        'tipo_contratacao', 'salario', 'empresa', 'skills'
-    ]
-    return pd.DataFrame(columns=columns)
-
-
-def save_data(df, filepath, sep=';'):
-    """Salva o DataFrame no arquivo CSV."""
-    df.to_csv(filepath, sep=sep, index=False)
-
-
-#Carregamento de Dados
-df_vagas = load_data(VAGAS_CSV_PATH)
-
-#Formulário de Cadastro
-st.markdown("---")
-st.subheader("Informações da Vaga")
-
-with st.form(key="cadastro_vaga", clear_on_submit=True):
-    #Layout em colunas
+#Formulário
+with st.form(key="vaga_form", clear_on_submit=True):
+    st.subheader("Informações principais")
     col1, col2 = st.columns(2)
-
     with col1:
-        titulo = st.text_input("**Título da Vaga**", placeholder="Ex: Engenheiro de Dados Pleno")
-        empresa = st.text_input("**Nome da Empresa**", placeholder="Ex: Inovatech Soluções")
-        tipo_contratacao = st.selectbox(
-            "**Tipo de Contratação**",
-            ["CLT", "PJ", "Estágio", "Temporário"],
-            index=None
-        )
-
+        titulo = st.text_input("**Título da vaga**", placeholder="Ex: Engenheiro de Software sênior")
+        empresa = st.text_input("**Empresa**", placeholder="Ex: Google")
+        salario = st.number_input("**Salário (R$)**", min_value=0.0, step=100.0, format="%.2f")
     with col2:
-        #Formatando o salário para o formato do CSV (string com vírgula)
-        salario_num = st.number_input("**Salário (R$)**", min_value=0.0, format="%.2f", step=100.0)
-        #Convertendo para o formato string '12.345,00'
-        salario = f"{salario_num:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-        skills = st.text_input("**Skills (separadas por vírgula)**", placeholder="Ex: Python, SQL, Power BI")
-
-    descricao = st.text_area("**Descrição da Vaga**", placeholder="Descreva as responsabilidades, requisitos...")
-
-    st.subheader("Localização")
-    col_loc1, col_loc2 = st.columns([2, 1])
-
-    with col_loc1:
         cidade = st.text_input("**Cidade**", placeholder="Ex: São Paulo")
-    with col_loc2:
         estado = st.text_input("**Estado (UF)**", max_chars=2, placeholder="Ex: SP")
+        tipo_contratacao = st.selectbox("**Tipo de contratação**", options=TIPOS_CONTRATACAO)
 
-    #Botão de Envio
-    submitted = st.form_submit_button("Cadastrar Vaga")
+    st.subheader("Descrição e requisitos")
+    descricao = st.text_area("**Descrição da vaga**", height=150, placeholder="Descreva as responsabilidades...")
 
-#Lógica de Salvamento
+    #MODIFICADO: Usando Text Area para salvar como LISTA
+    skills_input = st.text_area(
+        "**Skills Necessárias (uma por linha)**",
+        height=100,
+        placeholder="Python\nReact\nMongoDB\nDocker"
+    )
+
+    submitted = st.form_submit_button("Cadastrar vaga")
+
+#Lógica de salvamento, agora com Mongo e Embeddings
 if submitted:
-    # Validação básica
-    if not all([titulo, empresa, tipo_contratacao, skills, cidade, estado, descricao]):
+    #Validação
+    if not all([titulo, empresa, tipo_contratacao, skills_input, cidade, estado, descricao]):
         st.error("⚠️ Por favor, preencha todos os campos obrigatórios.")
     else:
         try:
-            #Gerar novo ID
-            if df_vagas.empty:
-                novo_id = 1
+            col_vagas, _, _ = get_collections()
+            if col_vagas is None:
+                st.error("Não foi possível conectar à coleção de vagas.")
+                st.stop()
+
+            ############LÓGICA PARA GERAR NOVO ID NUMÉRICO############
+            last_doc = col_vagas.find_one(sort=[("id", -1)])
+
+            novo_id = 1  #Padrão se a coleção estiver vazia
+            if last_doc and "id" in last_doc:
+                novo_id = int(last_doc["id"]) + 1
+            ##########################################################
+
+            #Converte skills de string (uma por linha) para lista
+            skills_list = [s.strip() for s in skills_input.split('\n') if s.strip()]
+
+            #*** USO DE EMBEDDING ***
+            st.write("Tentando gerar embedding para a vaga...")
+            text_to_embed = f"Título: {titulo}. Descrição: {descricao}. Skills: {', '.join(skills_list)}"
+
+            embedding = create_embedding(text_to_embed)
+
+            ############LÓGICA DE FALHA MODIFICADA (Tolerante)############
+            embedding_to_save = []  #Define um valor padrão (lista vazia)
+            if embedding is None:
+                st.warning(
+                    "⚠️ AVISO: Falha ao gerar embedding (Quota Excedida?). A vaga será salva SEM a função de busca por IA.")
             else:
-                novo_id = int(df_vagas['id'].max()) + 1
+                st.success("Embedding gerado com sucesso!")
+                embedding_to_save = embedding
+            ##############################################################
 
-            #Criar novo registro
-            nova_vaga = pd.DataFrame([{
-                'id': novo_id,
-                'titulo': titulo,
-                'descricao': descricao,
-                'cidade': cidade,
-                'estado': estado.upper(),
-                'tipo_contratacao': tipo_contratacao,
-                'salario': f" {salario} ",  # Adiciona espaços como no seu CSV
-                'empresa': empresa,
-                'skills': skills
-            }])
+            #Montar o documento para o MongoDB
+            nova_vaga_doc = {
+                "id": novo_id,
+                "titulo": titulo,
+                "descricao": descricao,
+                "cidade": cidade,
+                "estado": estado.upper(),
+                "tipo_contratacao": tipo_contratacao,
+                "salario": salario,
+                "empresa": empresa,
+                "skills": skills_list,
+                "embedding": embedding_to_save,  #Salva o vetor (ou lista vazia)
+                "data_cadastro": datetime.datetime.now(datetime.timezone.utc)
+            }
 
-            #Adicionar ao DataFrame principal
-            df_atualizado = pd.concat([df_vagas, nova_vaga], ignore_index=True)
+            #Inserir no banco
+            result = col_vagas.insert_one(nova_vaga_doc)
 
-            #Salvar no CSV
-            save_data(df_atualizado, VAGAS_CSV_PATH)
-
-            st.success(f"🎉 Vaga '{titulo}' cadastrada com sucesso! (ID: {novo_id})")
+            st.success(f"🎉 Vaga '{titulo}' (ID: {novo_id}) cadastrada com sucesso!")
+            st.info(f"ID da Vaga no MongoDB: `{result.inserted_id}`")
             st.balloons()
 
+            #Limpa o cache para a lista ser atualizada automaticamente
+            st.cache_data.clear()
+
+        except PyMongoError as e:
+            st.error(f"Erro ao salvar no MongoDB: {e}")
         except Exception as e:
-            st.error(f"Ocorreu um erro ao salvar a vaga: {e}")
+            st.error(f"Um erro inesperado ocorreu: {e}")

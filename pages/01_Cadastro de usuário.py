@@ -1,33 +1,11 @@
 import streamlit as st
-import pandas as pd
-import os
-import re  #Para validar email
-
-#Constantes
-USUARIOS_CSV_PATH = "usuarios.csv"
-USUARIOS_COLUMNS = ['email', 'password']
+from db_connection import get_collections  #Importa nossa nova função
+import re
+import bcrypt  #Usaremos bcrypt para senhas
+from pymongo.errors import PyMongoError
 
 
-#Funções de Usuário
-def load_users():
-    """Carrega o CSV de usuários. Se não existir, cria um DataFrame vazio."""
-    if not os.path.exists(USUARIOS_CSV_PATH):
-        #Se o arquivo não existe, já retorna o DataFrame vazio
-        return pd.DataFrame(columns=USUARIOS_COLUMNS)
-    try:
-        df = pd.read_csv(USUARIOS_CSV_PATH, sep=';')
-        if df.empty:
-            return pd.DataFrame(columns=USUARIOS_COLUMNS)
-        return df
-    except pd.errors.EmptyDataError:
-        return pd.DataFrame(columns=USUARIOS_COLUMNS)
-
-
-def save_users(df):
-    """Salva o DataFrame de usuários no CSV."""
-    #O 'header=True' garante que o cabeçalho seja escrito na primeira vez
-    df.to_csv(USUARIOS_CSV_PATH, sep=';', index=False, header=True)
-
+#Funções de usuário (agora com Mongo)
 
 def is_valid_email(email):
     """Valida o formato do email usando regex."""
@@ -35,14 +13,20 @@ def is_valid_email(email):
     return re.match(regex, email)
 
 
-#Configuração da Página
+def hash_password(password):
+    """Gera um hash seguro para a senha."""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+
+#Configuração da página
 st.set_page_config(
     page_title="Cadastro de Usuário",
     page_icon="📝",
     layout="centered"
 )
 
-st.title("📝 Cadastro de Novo Usuário")
+st.title("📝 Cadastro de Novo Usuário (MongoDB)")
+st.warning("As senhas são agora armazenadas com hash de segurança (bcrypt).", icon="🔒")
 
 with st.form(key="register_form", clear_on_submit=True):
     email = st.text_input("Email", placeholder="email@exemplo.com")
@@ -52,27 +36,43 @@ with st.form(key="register_form", clear_on_submit=True):
     submit_button = st.form_submit_button("Cadastrar")
 
 if submit_button:
-    df_users = load_users()
+    _, _, col_usuarios = get_collections()
+    if col_usuarios is None:
+        st.error("Não foi possível conectar ao banco de dados de usuários.")
+        st.stop()
+
+    #Verifica se o usuário já existe
+    existing_user = col_usuarios.find_one({"email": email})
 
     #Validações
     if not is_valid_email(email):
         st.error("Por favor, insira um email válido.")
     elif password != confirm_password:
         st.error("As senhas não coincidem.")
-    elif not df_users.empty and email in df_users['email'].values:
+    elif len(password) < 8:
+        st.error("A senha deve ter pelo menos 8 caracteres.")
+    elif existing_user:
         st.error("Este email já está cadastrado.")
     else:
         #Sucesso
         try:
-            #Salva a senha em texto puro
-            novo_usuario = pd.DataFrame([[email, password]], columns=USUARIOS_COLUMNS)
+            #Gera o hash da senha
+            password_hash = hash_password(password)
 
-            df_atualizado = pd.concat([df_users, novo_usuario], ignore_index=True)
+            #Cria o novo documento de usuario
+            novo_usuario_doc = {
+                "email": email,
+                "password_hash": password_hash,  #Salva o hash, não a senha
+                "tipo_usuario": "candidato"  #Define um tipo padrão
+            }
 
-            save_users(df_atualizado)
+            #Insere no MongoDB
+            result = col_usuarios.insert_one(novo_usuario_doc)
 
-            st.success("Usuário cadastrado com sucesso! 🥳")
-            st.info("Retorne à página de Login para entrar no sistema.")
+            st.success(f"Usuário '{email}' cadastrado com sucesso!")
+            st.info(f"ID do Usuário: {result.inserted_id}")
 
+        except PyMongoError as e:
+            st.error(f"Erro ao salvar no MongoDB: {e}")
         except Exception as e:
-            st.error(f"Ocorreu um erro ao salvar o cadastro: {e}")
+            st.error(f"Um erro inesperado ocorreu: {e}")

@@ -1,75 +1,88 @@
 import streamlit as st
 import pandas as pd
-import os
+from db_connection import get_collections  #Importa nossa nova função
+import locale
 
-
-#Carrega os dados
-@st.cache_data
-def load_vagas_data(file_path):
-    """Carrega o DataFrame de vagas com o delimitador correto."""
+#Config de localidade (para moeda)
+try:
+    locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+except locale.Error:
     try:
-        #Separador é ponto e vírgula
-        df = pd.read_csv(file_path, sep=';')
+        locale.setlocale(locale.LC_ALL, 'Portuguese_Brazil.1252')
+    except locale.Error:
+        pass  #Ignora se não conseguir definir
 
-        #Tira o R$ e troca , por . no salário, para ficar no padrão do pandas
-        df['salario_clean'] = df['salario'].astype(str).str.replace(r'[^\d,]', '', regex=True).str.replace(',', '.')
 
-        #Transforma o salario formatado em float (se tiver algum problema, deixa como NaN)
-        df['salario_float'] = pd.to_numeric(df['salario_clean'], errors='coerce')
+#Carregamento de dados (agora do MongoDB)
+@st.cache_data
+def load_vagas_data():
+    """Carrega o DataFrame de vagas a partir do MongoDB Atlas."""
+    col_vagas, _, _ = get_collections()
+    if col_vagas is None:
+        st.error("Não foi possível conectar à coleção de vagas.")
+        return pd.DataFrame()  #Retorna DF vazio
+
+    try:
+        #Busca todos os documentos da coleção
+        cursor = col_vagas.find()
+        vagas_list = list(cursor)
+
+        #Converte a lista de dicionários em DataFrame
+        df = pd.DataFrame(vagas_list)
+
+        if df.empty:
+            return df
+
+        #Converte o ObjectId para string (útil para exibição)
+        if '_id' in df.columns:
+            df['_id'] = df['_id'].astype(str)
+
+        #Converte 'salario' para numérico (JSON já vem numérico, mas é bom garantir)
+        df['salario_float'] = pd.to_numeric(df['salario'], errors='coerce')
 
         return df
     except Exception as e:
-        st.error(f"Erro ao carregar ou processar o arquivo CSV: {e}")
-        return pd.DataFrame()  #se tiver erro, retorna dataframe vazio
+        st.error(f"Erro ao carregar vagas do MongoDB: {e}")
+        return pd.DataFrame()
 
 
 #"main()"
-
 st.set_page_config(
     page_title="Listagem de vagas",
     page_icon="💼",
     layout="wide"
 )
 
-st.title("Lista de Vagas em Aberto")
+st.title("Lista de Vagas em Aberto (MongoDB)")
 st.markdown("---")
 
-file_path = "vagas.csv"
-
-if not os.path.exists(file_path):
-    st.error(f"Erro: O arquivo de vagas '{file_path}' não foi encontrado.")
-    st.warning("Certifique-se de que o arquivo CSV está na mesma pasta que este script Streamlit.")
-    st.stop()
-
-#Carrega os dados
-df_vagas = load_vagas_data(file_path)
+df_vagas = load_vagas_data()
 
 if df_vagas.empty:
-    st.warning("Não foi possível carregar os dados de vagas. Verifique o arquivo CSV.")
+    st.warning("Nenhuma vaga encontrada no banco de dados.")
     st.stop()
 
-st.info(f"O sistema encontrou um total de **{len(df_vagas)}** vagas abertas.")
+#FILTROS (lógica tradicional do Pandas)
+st.sidebar.header("Filtros")
+search_query = st.sidebar.text_input("Buscar por Título/Empresa/Cidade", "").lower()
 
-#Sidebar
-st.sidebar.header("Filtros de Vagas")
-search_query = st.sidebar.text_input("Buscar por Título/Descrição/Empresa/Cidade", "").lower()
+tipos_contratacao_unicos = ['Todos'] + list(df_vagas['tipo_contratacao'].unique())
+tipo_selecionado = st.sidebar.selectbox(
+    "Filtrar por Tipo de Contratação",
+    options=tipos_contratacao_unicos
+)
 
-tipos_unicos = ['Todos'] + sorted(df_vagas['tipo_contratacao'].unique().tolist())
-tipo_selecionado = st.sidebar.selectbox("Tipo de Contratação", tipos_unicos)
-
-#Aplica os filtros
+#LÓGICA DE FILTRO (Pandas)
 df_filtered = df_vagas.copy()
 
-#Filtro de busca textual
 if search_query:
     df_filtered = df_filtered[
-        df_filtered['titulo'].str.lower().str.contains(search_query) |
-        df_filtered['descricao'].str.lower().str.contains(search_query) |
-        df_filtered['empresa'].str.lower().str.contains(search_query) |
-        df_filtered['cidade'].str.lower().str.contains(search_query)
+        df_filtered['titulo'].str.lower().str.contains(search_query, na=False) |
+        df_filtered['descricao'].str.lower().str.contains(search_query, na=False) |
+        df_filtered['empresa'].str.lower().str.contains(search_query, na=False) |
+        df_filtered['cidade'].str.lower().str.contains(search_query, na=False)
         ]
 
-#Filtro por tipo de contratação
 if tipo_selecionado != 'Todos':
     df_filtered = df_filtered[df_filtered['tipo_contratacao'] == tipo_selecionado]
 
@@ -79,26 +92,26 @@ if df_filtered.empty:
     st.warning("Nenhuma vaga encontrada com os filtros e critérios de busca atuais.")
     st.stop()
 
-
-# De fato mostrar as vagas
-
-# For para filtrar as vagas
+#Exibição das Vagas
 for index, row in df_filtered.iterrows():
-    # Formata o salario
-    # Usa o valor original (string) se a conversão der ruim
-    salario_display = row['salario']
-    if pd.notna(row['salario_float']):
-        salario_display = f"R$ {row['salario_float']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+    salario_display = "Não informado"
+    if pd.notna(row['salario_float']) and row['salario_float'] > 0:
+        try:
+            salario_display = locale.currency(row['salario_float'], grouping=True, symbol=True)
+        except Exception:
+            salario_display = f"R$ {row['salario_float']:,.2f}"
 
-    # Título do expander: Título da Vaga | Empresa | Cidade/Estado
     title = f"**{row['titulo']}** na **{row['empresa']}** - {row['cidade']} ({row['estado']})"
 
     with st.expander(title):
-        st.markdown(f"**💰 Salário:** {salario_display} | **🤝 Contrato:** {row['tipo_contratacao']}")
-        st.markdown(f"**📍 Local:** {row['cidade']} - {row['estado']}")
-        st.markdown(f"**🛠️ Skills/Requisitos:** {row['skills']}")
+        st.markdown(f"**💰 Salário:** {salario_display} | **✍️ Contratação:** {row['tipo_contratacao']}")
 
-        st.markdown("---")
+        #'skills' agora é uma lista vinda do Mongo
+        if isinstance(row['skills'], list):
+            skills_display = ", ".join(row['skills'])
+        else:
+            skills_display = str(row.get('skills', 'N/A'))
 
-        st.markdown("**Descrição da Vaga:**")
-        st.markdown(row['descricao'])
+        st.markdown(f"**🛠️ Skills:** {skills_display}")
+        st.markdown(f"**Descrição:**\n{row['descricao']}")
+        st.caption(f"ID no Bando de Dados (Mongo): {row['_id']}")

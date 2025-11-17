@@ -1,61 +1,52 @@
 import streamlit as st
 import pandas as pd
-import os
+from db_connection import get_collections  #Importa nossa nova função
+import bcrypt  #Usaremos bcrypt para senhas (muito mais seguro)
 
 with st.sidebar:
     st.image("https://www2.unesp.br/images/unesp-full-center.svg")
 
-#Configuração da Página
 st.set_page_config(
     page_title="Login - App de Vagas",
     page_icon="🔑",
     layout="centered"
 )
 
-#Constantes
-USUARIOS_CSV_PATH = "usuarios.csv"
-USUARIOS_COLUMNS = ['email', 'password']  #Armazenaremos a senha em texto puro
 
-#Funções de Usuário
-def load_users():
-    """Carrega o CSV de usuários. Se não existir, cria um DataFrame vazio."""
-    if not os.path.exists(USUARIOS_CSV_PATH):
-        return pd.DataFrame(columns=USUARIOS_COLUMNS)
-    try:
-        return pd.read_csv(USUARIOS_CSV_PATH, sep=';')
-    except pd.errors.EmptyDataError:
-        return pd.DataFrame(columns=USUARIOS_COLUMNS)
+#Funções de usuário, agora com MongoDB
 
 def check_login(email, password):
-    """Verifica as credenciais (email e senha em texto puro)."""
-    df_users = load_users()
-    if df_users.empty:
+    """Verifica as credenciais contra o MongoDB."""
+    _, _, col_usuarios = get_collections()
+    if col_usuarios is None:
+        st.error("Não foi possível conectar ao banco de dados de usuários.")
         return False
 
-    #Filtra pelo email
-    user_data = df_users[df_users['email'] == email]
+    user_data = col_usuarios.find_one({"email": email})
 
-    if user_data.empty:
-        return False
+    if user_data:
+        #Verifica a senha hasheada
+        if bcrypt.checkpw(password.encode('utf-8'), user_data['password_hash']):
+            return True
 
-    #Compara a senha em texto puro
-    return user_data.iloc[0]['password'] == password
+    return False
 
-#Função de Logout
+
 def logout():
-    """Limpa o estado da sessão."""
+    """Limpa o estado da sessão ao fazer logout."""
     st.session_state['logged_in'] = False
     st.session_state['email'] = ""
+    st.success("Logout realizado com sucesso!")
     st.rerun()
 
-#Inicialização do Estado da Sessão
+
+#Estado da sessão (sem mudanças)
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
     st.session_state['email'] = ""
 
-#-------------------------------Lógica da Interface
+#Lógica da interface
 
-#Se o usuário JÁ ESTIVER LOGADO
 if st.session_state['logged_in']:
     st.sidebar.success(f"Logado como: {st.session_state['email']}")
     if st.sidebar.button("Logout"):
@@ -65,24 +56,20 @@ if st.session_state['logged_in']:
     st.write("Navegue pelas páginas na barra lateral para cadastrar ou visualizar vagas e currículos.")
     st.info("Você já está logado. Para sair, clique no botão 'Logout' na barra lateral.")
 
-#Se o usuário NÃO ESTIVER LOGADO
 else:
     st.title("Login do Sistema 🔑")
     st.write("Por favor, insira suas credenciais para acessar.")
+    st.info("Esta é uma simulação. O cadastro de usuários também foi movido para o MongoDB.", icon="ℹ️")
 
     with st.form(key="login_form"):
         email = st.text_input("Email", placeholder="email@exemplo.com")
         password = st.text_input("Senha", type="password")
-
         submit_button = st.form_submit_button("Entrar")
 
     if submit_button:
         if check_login(email, password):
             st.session_state['logged_in'] = True
             st.session_state['email'] = email
-            st.success("Login realizado com sucesso!")
-            st.rerun()  #Recarrega a página para mostrar o estado logado
+            st.rerun()
         else:
-            st.error("Email ou senha incorretos. Tente novamente.")
-
-    st.info("Não tem uma conta? Utilize a página 'Cadastro de Usuário' na barra lateral!")
+            st.error("Email ou senha inválidos.")
