@@ -11,44 +11,42 @@ COL_USUARIOS = "usuarios"
 
 
 #Conexão ao Google AI para Embeddings
-
-@st.cache_resource
-def configure_google_ai():
-    """
-    Configura a API do Google AI.
-    Retorna True se for bem-sucedido, False caso contrário.
-    """
-    try:
-        google_api_key = st.secrets["GOOGLE_AI_KEY"]
-        genai.configure(api_key=google_api_key)
-        print("Google AI configurado com sucesso!")
-        return True
-    except Exception as e:
-        st.error(f"Erro ao configurar o Google AI Studio: {e}")
-        return False
+#@st.cache_resource
+#def configure_google_ai():
+#    """
+#    Configura a API do Google AI.
+#    """
+#    try:
+#        google_api_key = st.secrets["GOOGLE_AI_KEY"]
+#        genai.configure(api_key=google_api_key)
+#        print("Google AI configurado com sucesso!")
+#        return True
+#    except Exception as e:
+#        st.error(f"Erro ao configurar o Google AI Studio: {e}")
+#return False
 
 
-def create_embedding(text_to_embed):
-    """
-    Cria um embedding para um dado texto.
-    Retorna o vetor (lista de floats) ou None se falhar.
-    """
-    #Garante que a API está configurada
-    if not configure_google_ai():
-        st.warning("API do Google AI não configurada.")
-        return None
-
-    try:
-        #Passamos o NOME DO MODELO (string) e não um objeto GenerativeModel
-        result = genai.embed_content(
-            model='models/embedding-001',
-            content=text_to_embed,
-            task_type="RETRIEVAL_DOCUMENT"  #Otimizado para busca
-        )
-        return result['embedding']
-    except Exception as e:
-        st.warning(f"Não foi possível gerar o embedding: {e}")
-    return None
+#def create_embedding(text_to_embed):
+#    """
+#    Cria um embedding para um dado texto.
+#    Retorna o vetor (lista de floats) ou None se falhar.
+#    """
+#    #Garante que a API está configurada
+#    if not configure_google_ai():
+#        st.warning("API do Google AI não configurada.")
+#        return None
+#
+#    try:
+#        #Passamos o NOME DO MODELO (string) e não um objeto GenerativeModel
+#        result = genai.embed_content(
+#            model='models/embedding-001',
+#            content=text_to_embed,
+#            task_type="RETRIEVAL_DOCUMENT"  #Otimizado para busca
+#        )
+#        return result['embedding']
+#    except Exception as e:
+#        st.warning(f"Não foi possível gerar o embedding: {e}")
+#    return None
 
 
 #Conexão ao MongoDB Atlas

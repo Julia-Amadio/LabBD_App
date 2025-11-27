@@ -3,5 +3,11 @@ streamlit-shadcn-ui
 pymongo
 pandas
 numpy
-neo4j
 mysql.connector.python
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+requests
+google-generativeai
+bcrypt

@@ -1,5 +1,6 @@
 import streamlit as st
-from db_connection import get_collections, create_embedding  #Importa nossas novas funções
+#REMOVIDO: create_embedding dos imports
+from db_connection import get_collections
 from pymongo.errors import PyMongoError
 import datetime
 
@@ -10,9 +11,8 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("👤 Cadastro de novo Currículo (com Embeddings)")
+st.title("👤 Cadastro de novo currículo")
 st.write("Preencha o formulário abaixo para adicionar um novo currículo ao banco de dados.")
-st.write("Caso a cota de requisições do Google AI Studio tenha sido excedida, o Embedding não será gerado e o Currículo será salvo SEM a função de busca por IA.")
 
 #Formulário
 with st.form(key="curriculo_form", clear_on_submit=True):
@@ -32,7 +32,6 @@ with st.form(key="curriculo_form", clear_on_submit=True):
                           placeholder="Ex: Profissional focado em desenvolvimento backend...")
 
     st.subheader("Habilidades e certificações")
-    #MODIFICADO: usando Text Area para salvar como LISTA
     col_s, col_i, col_c, col_e = st.columns(4)
     with col_s:
         skills_input = st.text_area("**Skills (uma por linha)**", placeholder="Python\nSQL\nGit")
@@ -46,12 +45,11 @@ with st.form(key="curriculo_form", clear_on_submit=True):
 
     submitted = st.form_submit_button("Cadastrar currículo")
 
-#Lógica de salvamento, agora com Mongo e Embeddings
+#Lógica de salvamento
 if submitted:
     #Validação
     if not all([nome, email, formacao, experiencia, skills_input, idiomas_input, resumo]):
-        st.error(
-            "⚠️ Por favor, preencha todos os campos obrigatórios (Nome, Email, Formação, Experiência, Skills, Idiomas, Resumo).")
+        st.error("⚠️ Por favor, preencha todos os campos obrigatórios.")
     else:
         try:
             _, col_curriculos, _ = get_collections()
@@ -59,43 +57,19 @@ if submitted:
                 st.error("Não foi possível conectar à coleção de currículos.")
                 st.stop()
 
-            ###########LÓGICA PARA GERAR NOVO ID NUMÉRICO###########
-            #Encontra o documento com o 'id' mais alto.
-            #Usamos find_one em vez de sort para eficiência
+            #Lógica para gerar ID sequencial
             last_doc = col_curriculos.find_one(sort=[("id", -1)])
-
-            novo_id = 1  #Padrão se a coleção estiver vazia
+            novo_id = 1
             if last_doc and "id" in last_doc:
                 novo_id = int(last_doc["id"]) + 1
-            ########################################################
 
-            #Converte inputs de string (uma por linha) para listas
+            #Converte inputs de string para listas
             skills_list = [s.strip() for s in skills_input.split('\n') if s.strip()]
             idiomas_list = [s.strip() for s in idiomas_input.split('\n') if s.strip()]
             cert_list = [s.strip() for s in cert_input.split('\n') if s.strip()]
             empresas_list = [s.strip() for s in empresas_input.split('\n') if s.strip()]
 
-            #*** USO DE EMBEDDING ***
-            st.write("Tentando gerar embedding para o currículo...")
-            text_to_embed = (
-                f"Formação: {formacao}. Experiência: {experiencia}. "
-                f"Resumo: {resumo}. Skills: {', '.join(skills_list)}. "
-                f"Idiomas: {', '.join(idiomas_list)}."
-            )
-
-            embedding = create_embedding(text_to_embed)
-
-            ########## LÓGICA DE FALHA MODIFICADA (Tolerante) ##########
-            embedding_to_save = []  #Define um valor padrão (lista vazia)
-            if embedding is None:
-                st.warning(
-                    "⚠️ AVISO: Falha ao gerar embedding (Quota Excedida?). O currículo será salvo SEM a função de busca por IA.")
-            else:
-                st.success("Embedding gerado com sucesso!")
-                embedding_to_save = embedding
-            ############################################################
-
-            #Montar o documento para o MongoDB
+            #Montar o documento (direto, sem lógica de IA)
             novo_curriculo_doc = {
                 "id": novo_id,
                 "nome": nome,
@@ -108,7 +82,7 @@ if submitted:
                 "certificacoes": cert_list,
                 "resumo": resumo,
                 "empresas_previas": empresas_list,
-                "embedding": embedding_to_save,  #Salva o vetor (ou lista vazia)
+                #"embedding": [],
                 "data_cadastro": datetime.datetime.now(datetime.timezone.utc)
             }
 
@@ -119,7 +93,6 @@ if submitted:
             st.info(f"ID do MongoDB: `{result.inserted_id}`")
             st.balloons()
 
-            #Limpa o cache para a lista ser atualizada automaticamente
             st.cache_data.clear()
 
         except PyMongoError as e:
