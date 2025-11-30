@@ -1,6 +1,5 @@
 import streamlit as st
-#REMOVIDO: create_embedding dos imports
-from db_connection import get_collections
+from db_connection import get_collections, create_embedding
 from pymongo.errors import PyMongoError
 import datetime
 
@@ -69,6 +68,23 @@ if submitted:
             cert_list = [s.strip() for s in cert_input.split('\n') if s.strip()]
             empresas_list = [s.strip() for s in empresas_input.split('\n') if s.strip()]
 
+            #---------- GERAÇÃO DE EMBEDDING ----------
+            embedding_to_save = []
+            st.info("Gerando embedding para o currículo...")
+            text_to_embed = (
+                f"Formação: {formacao}. Experiência: {experiencia}. "
+                f"Resumo: {resumo}. Skills: {', '.join(skills_list)}. "
+                f"Idiomas: {', '.join(idiomas_list)}."
+            )
+
+            embedding = create_embedding(text_to_embed)
+            if embedding:
+                embedding_to_save = embedding
+                st.success("✨ Embedding gerado com sucesso!")
+            else:
+                st.warning("⚠️ Cota do Google AI Studio excedida. O registro foi salvo no banco sem embedding.")
+            #-----------------------------------------
+
             #Montar o documento (direto, sem lógica de IA)
             novo_curriculo_doc = {
                 "id": novo_id,
@@ -82,7 +98,7 @@ if submitted:
                 "certificacoes": cert_list,
                 "resumo": resumo,
                 "empresas_previas": empresas_list,
-                #"embedding": [],
+                "embedding": embedding_to_save, #Salva o vetor ou lista vazia
                 "data_cadastro": datetime.datetime.now(datetime.timezone.utc)
             }
 

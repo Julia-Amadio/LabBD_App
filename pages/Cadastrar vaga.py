@@ -1,6 +1,5 @@
 import streamlit as st
-#REMOVIDO: create_embedding dos imports
-from db_connection import get_collections
+from db_connection import get_collections, create_embedding
 from pymongo.errors import PyMongoError
 import datetime
 
@@ -66,7 +65,20 @@ if submitted:
             #Converte skills de string para lista
             skills_list = [s.strip() for s in skills_input.split('\n') if s.strip()]
 
-            #Montar o documento para o MongoDB (direto, sem lógica de IA)
+            #--------- GERAÇÃO DE EMBEDDING ---------
+            embedding_to_save = []
+            st.info("Gerando embedding para a vaga...")
+            text_to_embed = f"Título: {titulo}. Descrição: {descricao}. Skills: {', '.join(skills_list)}"
+            embedding = create_embedding(text_to_embed)
+
+            if embedding:
+                embedding_to_save = embedding
+                st.success("✨ Embedding gerado com sucesso!")
+            else:
+                st.warning("⚠️ Cota do Google AI Studio excedida. O registro foi salvo no banco sem embedding.")
+            #----------------------------------------
+
+            #Montar o documento para o MongoDB
             nova_vaga_doc = {
                 "id": novo_id,
                 "titulo": titulo,
@@ -77,7 +89,7 @@ if submitted:
                 "salario": salario,
                 "empresa": empresa,
                 "skills": skills_list,
-                #"embedding": [],
+                "embedding": embedding_to_save, #Salva o vetor ou lista vazia
                 "data_cadastro": datetime.datetime.now(datetime.timezone.utc)
             }
 

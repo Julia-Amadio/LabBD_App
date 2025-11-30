@@ -3,54 +3,55 @@ from pymongo import MongoClient
 import google.generativeai as genai
 from pymongo.errors import ConnectionFailure
 
-#Nome do Banco e Coleções
+#Nome do banco e coleções
 DB_NAME = "Empregos"
 COL_VAGAS = "vagas"
 COL_CURRICULOS = "curriculos"
 COL_USUARIOS = "usuarios"
 
-
-#Conexão ao Google AI para Embeddings
-#@st.cache_resource
-#def configure_google_ai():
-#    """
-#    Configura a API do Google AI.
-#    """
-#    try:
-#        google_api_key = st.secrets["GOOGLE_AI_KEY"]
-#        genai.configure(api_key=google_api_key)
-#        print("Google AI configurado com sucesso!")
-#        return True
-#    except Exception as e:
-#        st.error(f"Erro ao configurar o Google AI Studio: {e}")
-#return False
-
-
-#def create_embedding(text_to_embed):
-#    """
-#    Cria um embedding para um dado texto.
-#    Retorna o vetor (lista de floats) ou None se falhar.
-#    """
-#    #Garante que a API está configurada
-#    if not configure_google_ai():
-#        st.warning("API do Google AI não configurada.")
-#        return None
-#
-#    try:
-#        #Passamos o NOME DO MODELO (string) e não um objeto GenerativeModel
-#        result = genai.embed_content(
-#            model='models/embedding-001',
-#            content=text_to_embed,
-#            task_type="RETRIEVAL_DOCUMENT"  #Otimizado para busca
-#        )
-#        return result['embedding']
-#    except Exception as e:
-#        st.warning(f"Não foi possível gerar o embedding: {e}")
-#    return None
+#--- Conexão ao Google AI Studio ---
+@st.cache_resource
+def configure_google_ai():
+    """
+    Configura a API do Google AI.
+    """
+    try:
+        #Pega a chave do secrets.toml
+        if "GOOGLE_AI_KEY" in st.secrets:
+            google_api_key = st.secrets["GOOGLE_AI_KEY"]
+            genai.configure(api_key=google_api_key)
+            return True
+        else:
+            print("❌ Erro: Chave GOOGLE_AI_KEY não encontrada nos secrets.")
+            return False
+    except Exception as e:
+        print(f"❌ Erro ao configurar Google AI: {e}")
+        return False
 
 
-#Conexão ao MongoDB Atlas
+def create_embedding(text_to_embed):
+    """
+    Gera o embedding (vetor) para o texto.
+    Modelo: text-embedding-004 (768 dimensões).
+    """
+    if not configure_google_ai():
+        return None
 
+    try:
+        #O modelo text-embedding-004 gera 768 dimensões por padrão.
+        #Não definimos output_dimensionality para evitar cortes.
+        result = genai.embed_content(
+            model='models/text-embedding-004',
+            content=text_to_embed,
+            task_type="RETRIEVAL_DOCUMENT"
+        )
+        return result['embedding']
+    except Exception as e:
+        #Retorna None para que o script saiba que falhou (cota ou erro)
+        print(f"⚠️ Erro na API do Google: {e}")
+        return None
+
+#--- Conexão ao MongoDB Atlas ---
 @st.cache_resource
 def get_mongo_client():
     """
