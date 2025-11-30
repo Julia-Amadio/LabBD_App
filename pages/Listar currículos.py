@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from db_connection import get_collections  #Importa nossa nova função
+from db_connection import get_collections
 
 
 #Carregamento de dados (agora do Mongo)
@@ -29,9 +29,8 @@ def load_curriculos_data():
         return pd.DataFrame()
 
 
-#Funções auxiliares para lidar com listas
+#Funções auxiliares
 def join_list_field(field):
-    """Converte um campo (que pode ser lista ou string) em uma string única para busca."""
     if isinstance(field, list):
         return ' '.join(field).lower()
     elif isinstance(field, str):
@@ -40,7 +39,6 @@ def join_list_field(field):
 
 
 def format_list_display(data_list):
-    """Formata uma lista para exibição bonita."""
     if isinstance(data_list, list) and data_list:
         return ", ".join(data_list)
     elif isinstance(data_list, str) and data_list:
@@ -50,28 +48,31 @@ def format_list_display(data_list):
 
 #"main()"
 st.set_page_config(
-    page_title="Listagem de currículos",
-    page_icon="📜",
+    page_title="Banco de talentos",
+    page_icon="👥",
     layout="wide"
 )
 
-st.title("Lista de Currículos (MongoDB)")
-st.markdown("---")
+st.title("👥 Banco de talentos")
+st.markdown("Explore os perfis cadastrados no sistema.")
+
+if st.sidebar.button("🔄 Atualizar lista"):
+    st.cache_data.clear()
+    st.rerun()
 
 df_curriculos = load_curriculos_data()
 
 if df_curriculos.empty:
-    st.warning("Nenhum currículo encontrado no banco de dados.")
+    st.info("Ainda não há currículos cadastrados.")
     st.stop()
 
-#FILTROS
+#--- FILTROS ---
 st.sidebar.header("Filtros")
-search_query = st.sidebar.text_input("Buscar por Formação/Experiência/Skill/Idioma", "").lower()
+search_query = st.sidebar.text_input("🔍 Buscar (Skill, Idioma, Formação)", "").lower()
 
 df_filtered = df_curriculos.copy()
 
 if search_query:
-    #Cria colunas "pesquisáveis" juntando as listas
     df_filtered['search_skills'] = df_filtered['skills'].apply(join_list_field)
     df_filtered['search_idiomas'] = df_filtered['idiomas'].apply(join_list_field)
 
@@ -82,30 +83,37 @@ if search_query:
         df_filtered['search_idiomas'].str.contains(search_query, na=False)
         ]
 
-st.subheader(f"Currículos Encontrados: {len(df_filtered)}")
+#KPI Simples
+st.metric("Candidatos Encontrados", len(df_filtered))
+st.markdown("---")
 
 if df_filtered.empty:
-    st.warning("Nenhum currículo encontrado com os filtros e critérios de busca atuais.")
+    st.warning("Nenhum currículo encontrado com os filtros atuais.")
     st.stop()
 
-#Exibição
+#--- EXIBIÇÃO ---
 for index, row in df_filtered.iterrows():
-    title = f"**{row['nome']}** - **{row['formacao']}**"
+    title = f"**{row['nome']}** - {row.get('formacao', 'Formação N/A')}"
 
     with st.expander(title):
-        email = row.get('email', 'N/A')
-        telefone = row.get('telefone', 'N/A')
+        #Layout em colunas: Dados profissionais | Contato
+        col_dados, col_contato = st.columns([2, 1])
 
-        skills_display = format_list_display(row.get('skills', []))
-        idiomas_display = format_list_display(row.get('idiomas', []))
-        empresas_display = format_list_display(row.get('empresas_previas', []))
-        cert_display = format_list_display(row.get('certificacoes', []))
+        with col_dados:
+            st.markdown("#### 💼 Perfil profissional")
 
-        st.markdown(f"**📧 Email:** {email} | **📞 Telefone:** {telefone}")
-        st.markdown(f"**👔 Experiência:** {row.get('experiencia', 'N/A')}")
-        st.markdown(f"**💻 Skills:** {skills_display}")
-        st.markdown(f"**📖 Idiomas:** {idiomas_display}")
-        st.markdown(f"**🏢 Empresas Anteriores:** {empresas_display}")
-        st.markdown(f"**🏅 Certificações:** {cert_display}")
-        st.markdown(f"**Resumo:**\n{row.get('resumo', 'N/A')}")
-        st.caption(f"ID no Bando de Dados (Mongo): {row['_id']}")
+            skills = format_list_display(row.get('skills', []))
+            idiomas = format_list_display(row.get('idiomas', []))
+
+            if skills != "N/A": st.markdown(f"**🛠 Skills:** {skills}")
+            if idiomas != "N/A": st.markdown(f"**🗣 Idiomas:** {idiomas}")
+
+            st.markdown(f"**Experiência:** {row.get('experiencia', 'N/A')}")
+            st.info(f"**Resumo:** {row.get('resumo', 'N/A')}")
+
+        with col_contato:
+            st.markdown("#### 📞 Contato")
+            st.markdown(f"**Email:** {row.get('email', 'N/A')}")
+            st.markdown(f"**Tel:** {row.get('telefone', 'N/A')}")
+
+        st.caption(f"ID: {row.get('id', 'N/A')}")

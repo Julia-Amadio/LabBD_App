@@ -31,16 +31,21 @@ with st.form(key="curriculo_form", clear_on_submit=True):
                           placeholder="Ex: Profissional focado em desenvolvimento backend...")
 
     st.subheader("Habilidades e certificações")
+    st.caption("💡 Para listas, digite um item e pressione ENTER para pular para a próxima linha.")
+
     col_s, col_i, col_c, col_e = st.columns(4)
     with col_s:
-        skills_input = st.text_area("**Skills (uma por linha)**", placeholder="Python\nSQL\nGit")
+        skills_input = st.text_area("**Skills**", placeholder="Python\nSQL\nGit",
+                                    help="Digite uma habilidade por linha.")
     with col_i:
-        idiomas_input = st.text_area("**Idiomas (uma por linha)**", placeholder="Inglês (Avançado)\nEspanhol (Básico)")
+        idiomas_input = st.text_area("**Idiomas**", placeholder="Inglês (Avançado)\nEspanhol (Básico)",
+                                     help="Digite um idioma por linha.")
     with col_c:
-        cert_input = st.text_area("**Certificações (uma por linha)**",
-                                  placeholder="AWS Cloud Practitioner\nScrum Master (CSM)")
+        cert_input = st.text_area("**Certificações**", placeholder="AWS Cloud Practitioner\nScrum Master",
+                                  help="Digite uma certificação por linha.")
     with col_e:
-        empresas_input = st.text_area("**Empresas prévias (uma por linha)**", placeholder="Empresa X\nStartup Y")
+        empresas_input = st.text_area("**Empresas prévias**", placeholder="Empresa X\nStartup Y",
+                                      help="Digite uma empresa por linha.")
 
     submitted = st.form_submit_button("Cadastrar currículo")
 
