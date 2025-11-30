@@ -1,78 +1,108 @@
 import streamlit as st
-from db_connection import get_collections  #Importa nossa nova função
+from db_connection import get_collections
 import re
-import bcrypt  #Usaremos bcrypt para senhas
+import bcrypt
 from pymongo.errors import PyMongoError
+import datetime
 
 
-#Funções de usuário (agora com Mongo)
-
+#--- Funções auxiliares ---
 def is_valid_email(email):
-    """Valida o formato do email usando regex."""
     regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
     return re.match(regex, email)
 
 
 def hash_password(password):
-    """Gera um hash seguro para a senha."""
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
 
-#Configuração da página
-st.set_page_config(
-    page_title="Cadastro de Usuário",
-    page_icon="📝",
-    layout="centered"
+#--- Configuração da página ---
+st.set_page_config(page_title="Cadastro de Usuário", page_icon="📝", layout="centered")
+
+st.title("📝 Criar Nova Conta")
+st.write("Crie sua conta para acessar o sistema.")
+
+#--- Seleção de perfil (FORA DO FORMULÁRIO) ---
+#Ao colocar fora, o Streamlit recarrega a página assim que você muda a opção,
+#permitindo esconder/mostrar campos dinamicamente.
+#Estamos usando isso para ESCONDER o campo EMPRESA ao cadastrar um CANDIDATO.
+tipo_selecionado = st.radio(
+    "Eu sou um:",
+    ["Candidato", "Empregador"],
+    horizontal=True,
+    help="Selecione seu perfil para ver os campos adequados."
 )
 
-st.title("📝 Cadastro de Novo Usuário (MongoDB)")
-st.warning("As senhas são agora armazenadas com hash de segurança (bcrypt).", icon="🔒")
+st.markdown("---")
 
 with st.form(key="register_form", clear_on_submit=True):
+    #1. Dados de login
     email = st.text_input("Email", placeholder="email@exemplo.com")
     password = st.text_input("Senha", type="password")
     confirm_password = st.text_input("Confirme a Senha", type="password")
+
+    #2. Campo condicional (só aparece se for empregador)
+    empresa_nome = ""  #Inicializa vazio para não quebrar a lógica se for candidato
+
+    if tipo_selecionado == "Empregador":
+        st.markdown("### Informações da Empresa")
+        empresa_nome = st.text_input(
+            "Nome da Empresa",
+            placeholder="Ex: Microsoft Brasil",
+            help="Obrigatório para contas empresariais (EMPREGADOR)."
+        )
 
     submit_button = st.form_submit_button("Cadastrar")
 
 if submit_button:
     _, _, col_usuarios = get_collections()
+
     if col_usuarios is None:
-        st.error("Não foi possível conectar ao banco de dados de usuários.")
+        st.error("Erro de conexão com o banco.")
         st.stop()
 
-    #Verifica se o usuário já existe
-    existing_user = col_usuarios.find_one({"email": email})
-
-    #Validações
+    #--- Validações ---
     if not is_valid_email(email):
-        st.error("Por favor, insira um email válido.")
-    elif password != confirm_password:
+        st.error("Email inválido.")
+        st.stop()
+
+    if password != confirm_password:
         st.error("As senhas não coincidem.")
-    elif len(password) < 8:
-        st.error("A senha deve ter pelo menos 8 caracteres.")
-    elif existing_user:
+        st.stop()
+
+    if len(password) < 6:
+        st.error("Senha muito curta (mínimo 6 caracteres).")
+        st.stop()
+
+    #Validação de negócio
+    tipo_tecnico = tipo_selecionado.lower()  #"candidato" ou "empregador"
+
+    if tipo_tecnico == "empregador" and not empresa_nome:
+        st.error("⚠️ Empregadores precisam informar o nome da empresa.")
+        st.stop()
+
+    #Verifica duplicidade
+    if col_usuarios.find_one({"email": email}):
         st.error("Este email já está cadastrado.")
-    else:
-        #Sucesso
-        try:
-            #Gera o hash da senha
-            password_hash = hash_password(password)
+        st.stop()
 
-            #Cria o novo documento de usuario
-            novo_usuario_doc = {
-                "email": email,
-                "password_hash": password_hash,  #Salva o hash, não a senha
-                "tipo_usuario": "candidato"  #Define um tipo padrão
-            }
+    #--- Montagem do documento ---
+    try:
+        novo_usuario = {
+            "email": email,
+            "password_hash": hash_password(password),
+            "tipo_usuario": tipo_tecnico,
+            "data_cadastro": datetime.datetime.now(datetime.timezone.utc),
 
-            #Insere no MongoDB
-            result = col_usuarios.insert_one(novo_usuario_doc)
+            #Lógica condicional de campos
+            "empresa": empresa_nome if tipo_tecnico == "empregador" else None,
+            "id_curriculo": None  #Inicializa vazio para todos
+        }
 
-            st.success(f"Usuário '{email}' cadastrado com sucesso!")
-            st.info(f"ID do Usuário: {result.inserted_id}")
+        col_usuarios.insert_one(novo_usuario)
 
-        except PyMongoError as e:
-            st.error(f"Erro ao salvar no MongoDB: {e}")
-        except Exception as e:
-            st.error(f"Um erro inesperado ocorreu: {e}")
+        st.success(f"Conta de {tipo_selecionado} criada com sucesso!")
+        st.info("Vá para a página de **Login** para entrar.")
+
+    except Exception as e:
+        st.error(f"Erro ao salvar: {e}")

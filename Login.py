@@ -1,75 +1,102 @@
 import streamlit as st
 import pandas as pd
-from db_connection import get_collections  #Importa nossa nova função
-import bcrypt  #Usaremos bcrypt para senhas (muito mais seguro)
-
-with st.sidebar:
-    st.image("https://www2.unesp.br/images/unesp-full-center.svg")
+from db_connection import get_collections
+import bcrypt
 
 st.set_page_config(
-    page_title="Login - App de Vagas",
+    page_title="Login - App de vagas",
     page_icon="🔑",
     layout="centered"
 )
 
-
-#Funções de usuário, agora com MongoDB
-
-def check_login(email, password):
-    """Verifica as credenciais contra o MongoDB."""
-    _, _, col_usuarios = get_collections()
-    if col_usuarios is None:
-        st.error("Não foi possível conectar ao banco de dados de usuários.")
-        return False
-
-    user_data = col_usuarios.find_one({"email": email})
-
-    if user_data:
-        #Verifica a senha hasheada
-        if bcrypt.checkpw(password.encode('utf-8'), user_data['password_hash']):
-            return True
-
-    return False
-
-
-def logout():
-    """Limpa o estado da sessão ao fazer logout."""
-    st.session_state['logged_in'] = False
-    st.session_state['email'] = ""
-    st.success("Logout realizado com sucesso!")
-    st.rerun()
-
-
-#Estado da sessão (sem mudanças)
+#--- Inicialização da sessão ---
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
     st.session_state['email'] = ""
+    st.session_state['tipo_usuario'] = ""
+    st.session_state['empresa'] = None
+    st.session_state['id_curriculo'] = None
 
-#Lógica da interface
 
+#--- Funções de autenticação ---
+def login_user(email, password):
+    """
+    Verifica credenciais e retorna os dados do usuário se válido.
+    """
+    _, _, col_usuarios = get_collections()
+    if col_usuarios is None:
+        st.error("Erro de conexão com o banco.")
+        return None
+
+    #Busca o usuário pelo email
+    user_data = col_usuarios.find_one({"email": email})
+
+    if user_data:
+        #Verifica a senha (bcrypt lida com o formato Binary do MongoDB automaticamente)
+        stored_hash = user_data['password_hash']
+        if bcrypt.checkpw(password.encode('utf-8'), stored_hash):
+            return user_data
+
+    return None
+
+
+def logout():
+    """Limpa toda a sessão."""
+    st.session_state.clear()
+    st.rerun()
+
+
+#--- Interface ---
 if st.session_state['logged_in']:
-    st.sidebar.success(f"Logado como: {st.session_state['email']}")
-    if st.sidebar.button("Logout"):
+    #Sidebar com informações do usuário logado
+    st.sidebar.divider()
+    st.sidebar.write(f"👤 **{st.session_state['email']}**")
+    st.sidebar.caption(f"Perfil: {st.session_state['tipo_usuario'].upper()}")
+
+    if st.sidebar.button("Sair / Logout"):
         logout()
 
-    st.title("Bem-vindo ao Sistema! 🚀")
-    st.write("Navegue pelas páginas na barra lateral para cadastrar ou visualizar vagas e currículos.")
-    st.info("Você já está logado. Para sair, clique no botão 'Logout' na barra lateral.")
+    st.title("Bem-vindo ao sistema! 🚀")
+
+    #Mensagem personalizada por tipo
+    tipo = st.session_state['tipo_usuario']
+    if tipo == 'empregador':
+        empresa = st.session_state.get('empresa', 'Sua Empresa')
+        st.success(f"Painel corporativo: **{empresa}**")
+        st.write("Utilize o menu lateral para **Cadastrar vagas** ou **Listar currículos**.")
+
+    elif tipo == 'candidato':
+        st.info("Painel do Candidato")
+        if st.session_state['id_curriculo']:
+            st.write("✅ Você já possui um currículo cadastrado.")
+        else:
+            st.warning("⚠️ Você ainda não cadastrou seu currículo. Vá em **Cadastrar currículo** para começar.")
+
+    elif tipo == 'admin':
+        st.error("🔧 Modo ADMIN ativado!")
+        st.write("Você tem acesso irrestrito a todas as funções.")
 
 else:
-    st.title("Login do Sistema 🔑")
-    st.write("Por favor, insira suas credenciais para acessar.")
-    st.info("Esta é uma simulação. O cadastro de usuários também foi movido para o MongoDB.", icon="ℹ️")
+    st.title("Login do sistema 🔑")
+    st.write("Entre com suas credenciais para acessar.")
 
     with st.form(key="login_form"):
-        email = st.text_input("Email", placeholder="email@exemplo.com")
+        email = st.text_input("Email")
         password = st.text_input("Senha", type="password")
-        submit_button = st.form_submit_button("Entrar")
+        submit = st.form_submit_button("Entrar")
 
-    if submit_button:
-        if check_login(email, password):
+    if submit:
+        user = login_user(email, password)
+        if user:
+            #SUCESSO: salva dados cruciais na sessão
             st.session_state['logged_in'] = True
-            st.session_state['email'] = email
+            st.session_state['email'] = user['email']
+            st.session_state['tipo_usuario'] = user['tipo_usuario']
+
+            #Recupera dados opcionais com segurança (.get)
+            st.session_state['empresa'] = user.get('empresa')
+            st.session_state['id_curriculo'] = user.get('id_curriculo')
+
             st.rerun()
         else:
-            st.error("Email ou senha inválidos.")
+            st.error("Email ou senha incorretos.")
