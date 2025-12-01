@@ -5,7 +5,7 @@ Este repositório contém o código-fonte de um aplicativo web para gerenciament
 ## 🌐 Deploy do projeto
 O deploy foi feito por meio da Streamlit Community Cloud. Este projeto está hospedado na URL https://fakelinkedinlabbd.streamlit.app/.
 
-# ✨ Funcionalidades do Sistema
+# <br>✨ Funcionalidades do Sistema
 
 ### 🔐 Autenticação e Perfis (RBAC)
 * **Sistema de login seguro:** autenticação com hash de senhas (`bcrypt`) e persistência de sessão.
@@ -33,7 +33,7 @@ O deploy foi feito por meio da Streamlit Community Cloud. Este projeto está hos
 * **Banco de dados NoSQL:** substituição de arquivos CSV por **MongoDB Atlas**, garantindo performance e escalabilidade na nuvem.
 * **Interface reativa:** desenvolvido em **Streamlit**, com *feedbacks* visuais instantâneos (toasts, balloons, barras de progresso).
 
-# 🔐 Documentação de perfis e permissões
+# <br>🔐 Documentação de perfis e permissões
 O sistema utiliza controle de acesso baseado em papéis (RBAC - Role-Based Access Control), definido pelo campo tipo_usuario na coleção usuarios do MongoDB.
 
 ## 👥 Perfis de Usuário
@@ -83,10 +83,10 @@ Superusuário responsável pela gestão e manutenção do sistema.
 | Visualizar próprio currículo      |✅|N/A|N/A|
 | Admin: Gerar Embeddings|⛔|⛔|✅|
 
-# 🧠 Funcionalidades de Inteligência Artificial (RAG)
+# <br>🧠 Funcionalidades de Inteligência Artificial (RAG)
 O sistema oferece aos **ADMINISTRADORES** uma funcionalidade que utiliza MongoDB Atlas Vector Search e Google Gemini para realizar buscas semânticas (baseadas no sentido do texto, não apenas palavras-chave).
 
-# 🛠️ Detalhes técnicos do Banco de Dados
+# <br>🛠️ Detalhes técnicos do Banco de Dados
 
 ## Coleção ```usuarios```
 Estrutura básica dos documentos de login:
@@ -110,7 +110,7 @@ Estrutura básica dos documentos de login:
 - **Hash de senha:** as senhas nunca são salvas em texto puro. Utilizamos ```bcrypt``` com salt automático.
 - **Proteção de rotas:** todas as páginas internas verificam ```st.session_state['logged_in']``` e ```st.session_state['tipo_usuario']``` antes de renderizar qualquer conteúdo.
 
-# 🚀 Como executar localmente
+# <br>🚀 Como executar localmente
 Para testar a aplicação em sua máquina local, siga os passos abaixo.
 
 **Pré-requisitos:** Python 3.8+, Git.
@@ -149,6 +149,6 @@ Para testar a aplicação em sua máquina local, siga os passos abaixo.
     ```
 6. Acesse o app abrindo o endereço http://localhost:8501 no seu navegador.
 
-# 👩‍💻 Autores
+# <br>👩‍💻 Autores
 - Julia Amadio
 - João Bastasini
