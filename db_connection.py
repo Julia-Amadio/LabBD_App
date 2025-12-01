@@ -102,7 +102,6 @@ def search_rag(
     """
     vagas_col, curriculos_col, _ = get_collections()
 
-    # Definição dos parâmetros baseados na escolha do usuário
     if target_collection == "vagas":
         collection = vagas_col
         index_name = "vagas_embedding_index" 
@@ -115,13 +114,12 @@ def search_rag(
         print("Coleção alvo inválida.")
         return []
 
-    # 1. Gerar embedding da pergunta
+    # Gera embedding da pergunta
     query_vector = create_embedding(user_query)
     if query_vector is None:
         return []
 
-    # 2. Pipeline de Agregação (Vector Search)
-    # Nota: O campo no banco se chama 'embedding' em ambos os cadastros.
+    # Vector Search
     aggregation_pipeline = [
         {
             "$vectorSearch": {
@@ -136,7 +134,7 @@ def search_rag(
             "$project": {
                 "_id": 1,
                 "score": { "$meta": "vectorSearchScore" },
-                **return_fields # Desempacota os campos que queremos retornar
+                **return_fields
             }
         }
     ]

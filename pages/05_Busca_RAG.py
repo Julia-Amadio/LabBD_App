@@ -22,7 +22,7 @@ target_collection = "vagas" if tipo_busca == "Vagas" else "curriculos"
 # --- Campo de Busca ---
 user_query = st.text_input(
     "Descreva o que você procura:",
-    placeholder="Ex: Procuro um especialista em dados que saiba Python e tenha experiência com bancos não relacionais." 
+    placeholder="Ex: Especialista em dados que saiba Python e tenha experiência com bancos não relacionais." 
                 if tipo_busca == "Currículos" 
                 else "Ex: Vagas para desenvolvedor junior home office com foco em frontend."
 )
