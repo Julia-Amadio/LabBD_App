@@ -2,6 +2,7 @@ import streamlit as st
 from pymongo import MongoClient
 import google.generativeai as genai
 from pymongo.errors import ConnectionFailure
+from typing import Literal
 
 #Nome do banco e coleções
 DB_NAME = "Empregos"
@@ -88,3 +89,62 @@ def get_collections():
     if db is not None:
         return db[COL_VAGAS], db[COL_CURRICULOS], db[COL_USUARIOS]
     return None, None, None
+
+# --- Função de Pesquisa RAG (Retrieval) ---
+# Vetoriza a consulta do usuário e usa o Atlas Vector Search
+def search_rag(
+    user_query: str,
+    target_collection: Literal["vagas", "curriculos"],
+    limit: int = 5
+):
+    """
+    Realiza a busca semântica no MongoDB Atlas.
+    """
+    vagas_col, curriculos_col, _ = get_collections()
+
+    # Definição dos parâmetros baseados na escolha do usuário
+    if target_collection == "vagas":
+        collection = vagas_col
+        index_name = "vagas_embedding_index" 
+        return_fields = {"titulo": 1, "descricao": 1, "empresa": 1, "salario": 1, "skills": 1}
+    elif target_collection == "curriculos":
+        collection = curriculos_col
+        index_name = "curriculos_embedding_index"
+        return_fields = {"nome": 1, "resumo": 1, "experiencia": 1, "skills": 1, "formacao": 1}
+    else:
+        print("Coleção alvo inválida.")
+        return []
+
+    # 1. Gerar embedding da pergunta
+    query_vector = create_embedding(user_query)
+    if query_vector is None:
+        return []
+
+    # 2. Pipeline de Agregação (Vector Search)
+    # Nota: O campo no banco se chama 'embedding' em ambos os cadastros.
+    aggregation_pipeline = [
+        {
+            "$vectorSearch": {
+                "index": index_name,
+                "path": "embedding", 
+                "queryVector": query_vector,
+                "numCandidates": 100, 
+                "limit": limit
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "score": { "$meta": "vectorSearchScore" },
+                **return_fields # Desempacota os campos que queremos retornar
+            }
+        }
+    ]
+
+    try:
+        results = list(collection.aggregate(aggregation_pipeline))
+        print(f"✅ Encontrados {len(results)} documentos similares em '{target_collection}'.")
+        return results
+    except Exception as e:
+        print(f"❌ Erro na Pesquisa Vetorial: {e}")
+        return []
