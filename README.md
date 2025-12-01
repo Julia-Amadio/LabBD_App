@@ -25,8 +25,8 @@ O deploy foi feito por meio da Streamlit Community Cloud. Este projeto está hos
 * **Busca de Candidatos:** Recrutadores podem filtrar profissionais por competências técnicas e formação.
 
 ### 🧠 Infraestrutura de IA (Vector Search)
-* **Busca Semântica:** integração com **MongoDB Atlas Vector Search** e **Google Gemini** para gerar *embeddings* (vetores) dos perfis e vagas.
-* **Matching inteligente:** capacidade de encontrar vagas ou candidatos baseados no *sentido* do texto, e não apenas em palavras exatas (funcionalidade suportada pelo *backend*).
+* **Busca semântica:** integração com **MongoDB Atlas Vector Search** e **Google Gemini** para gerar *embeddings* (vetores) dos perfis e vagas.
+* **Matching inteligente:** função oferecida para **administradores** que possui capacidade de encontrar vagas ou candidatos baseados no *sentido* do texto, e não apenas em palavras exatas (funcionalidade suportada pelo *backend*).
 * **Resiliência:** sistema de *fallback* que mantém o funcionamento normal mesmo se a cota da API de IA for excedida.
 
 ### ☁️ Arquitetura moderna
