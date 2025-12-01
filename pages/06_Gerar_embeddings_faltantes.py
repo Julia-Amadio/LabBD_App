@@ -4,16 +4,20 @@ import streamlit as st
 import traceback  #Para ver o erro real
 from db_connection import get_collections, create_embedding
 
-'''
-Código voltado à geração de embeddings (768d) para registros que não os possuem.
-Futuramente, se tornará uma função restrita apenas a administradores do sistema.
-'''
+#--- CONTROLE DE ACESSO (ADMIN ONLY) ---
+if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
+    st.warning("Faça login.")
+    st.stop()
 
-#Configuração da página para parecer um app de verdade
+if st.session_state['tipo_usuario'] != 'admin':
+    st.error("⛔ ACESSO RESTRITO: apenas ADMINISTRADORES podem acessar ferramentas de sistema.")
+    st.stop()
+#---------------------------------------
+
 st.set_page_config(page_title="Gerador de Embeddings", page_icon="⚙️", layout="wide")
 
 st.title("⚙️ Gerador de Embeddings (backfill)")
-st.markdown("Este script processa registros antigos que não possuem o campo `embedding`.")
+st.markdown("Este script processa registros antigos que não possuem o campo `embedding`, ou em que o campo se encontra vazio.")
 
 #Area de logs na tela
 log_area = st.empty()
@@ -46,8 +50,10 @@ def log_ui(msg, tipo="info"):
 def processar_colecao_visual(nome, collection, campos_texto):
     st.subheader(f"📂 Processando coleção: {nome}")
 
-    #Busca pendentes
-    query = {"embedding": {"$exists": False}}
+    #CORREÇÃO AQUI ---
+    #Busca pendentes: onde não existe OU onde é uma lista vazia []
+    query = {"$or": [{"embedding": {"$exists": False}}, {"embedding": []}]}
+
     pendentes = list(collection.find(query).sort("id", 1))
     total = len(pendentes)
 
@@ -111,7 +117,7 @@ def processar_colecao_visual(nome, collection, campos_texto):
 
 
 def main():
-    if st.button("▶️ Iniciar Processamento"):
+    if st.button("▶️ Iniciar processamento"):
         try:
             col_vagas, col_curriculos, _ = get_collections()
 
@@ -134,7 +140,6 @@ def main():
         except Exception as e:
             st.error("Ocorreu um erro fatal no script:")
             st.code(traceback.format_exc())  #Mostra o erro real na tela
-
 
 if __name__ == "__main__":
     main()

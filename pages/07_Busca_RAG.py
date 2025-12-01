@@ -1,15 +1,25 @@
 import streamlit as st
 from db_connection import search_rag
 
+#--- CONTROLE DE ACESSO (ADMIN ONLY) ---
+if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
+    st.warning("Faça login.")
+    st.stop()
+
+if st.session_state['tipo_usuario'] != 'admin':
+    st.error("⛔ ACESSO RESTRITO: apenas ADMINISTRADORES podem acessar ferramentas de sistema.")
+    st.stop()
+#---------------------------------------
+
 st.set_page_config(page_title="Busca Inteligente (IA)", page_icon="🤖", layout="wide")
 
 st.title("🤖 Busca Inteligente com IA")
 st.markdown("""
 Diferente da busca tradicional por palavras-chave, aqui você pode descrever o que procura.
-O sistema entenderá o **contexto** e o **significado** da sua busca (Busca Semântica).
+O sistema entenderá o **contexto** e o **significado** da sua busca (busca semântica).
 """)
 
-# --- Radio Button ---
+#--- Radio Button ---
 tipo_busca = st.radio(
     "O que você deseja buscar?",
     ["Vagas", "Currículos"],
@@ -19,7 +29,7 @@ tipo_busca = st.radio(
 
 target_collection = "vagas" if tipo_busca == "Vagas" else "curriculos"
 
-# --- Campo de Busca ---
+#--- Campo de busca ---
 user_query = st.text_input(
     "Descreva o que você procura:",
     placeholder="Ex: Especialista em dados que saiba Python e tenha experiência com bancos não relacionais." 
@@ -38,13 +48,13 @@ if user_query:
     else:
         st.success(f"Encontramos {len(resultados)} correspondências baseadas no significado!")
         
-        # Exibição dos Cards
+        #Exibição dos cards
         for doc in resultados:
             score = doc.get('score', 0)
             score_percent = f"{score * 100:.1f}%"
             
             if target_collection == "vagas":
-                # Layout para Vagas
+                #Layout para Vagas
                 with st.expander(f"{doc.get('titulo', 'Sem título')} | {doc.get('empresa', 'N/A')} ({score_percent} match)"):
                     st.markdown(f"**Descrição:** {doc.get('descricao')}")
                     st.markdown(f"**Skills:** {', '.join(doc.get('skills', []))}")
@@ -52,7 +62,7 @@ if user_query:
                         st.markdown(f"**Salário:** R$ {doc.get('salario'):.2f}")
                         
             else:
-                # Layout para Currículos
+                #Layout para Currículos
                 with st.expander(f"{doc.get('nome', 'Candidato')} | {doc.get('formacao', 'N/A')} ({score_percent} match)"):
                     st.markdown(f"**Resumo:** {doc.get('resumo')}")
                     st.markdown(f"**Experiência:** {doc.get('experiencia')}")

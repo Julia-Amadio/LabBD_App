@@ -3,15 +3,96 @@ from db_connection import get_collections, create_embedding
 from pymongo.errors import PyMongoError
 import datetime
 
-#Configuração da página
-st.set_page_config(
-    page_title="Cadastro de currículos",
-    page_icon="👤",
-    layout="wide"
-)
+#------- CONTROLE DE ACESSO -------
+if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
+    st.warning("Por favor, faça login.")
+    st.stop()
 
+tipo_usuario = st.session_state['tipo_usuario']
+id_curriculo_usuario = st.session_state.get('id_curriculo') #Pode ser None
+
+#Regra 1: empregador fora
+if tipo_usuario == 'empregador':
+    st.error("⛔ ACESSO RESTRITO: empregadores não podem cadastrar currículos!")
+    st.stop()
+
+#Regra 2: candidato que JÁ TEM currículo -> Modo misualização
+modo_visualizacao = False
+curriculo_existente = None
+
+if tipo_usuario == 'candidato' and id_curriculo_usuario is not None:
+    modo_visualizacao = True
+    #Busca os dados dele para mostrar
+    _, col_curriculos, _ = get_collections()
+
+    if col_curriculos is not None:  #Verifica explicitamente por None
+        curriculo_existente = col_curriculos.find_one({"id": id_curriculo_usuario})
+#----------------------------------
+
+st.set_page_config(page_title="Meu currículo", page_icon="👤", layout="wide")
+
+if modo_visualizacao:
+    #--- TELA DE VISUALIZAÇÃO (READ-ONLY) ---
+    st.title("👤 Meu currículo")
+    st.info("Você já possui um currículo ativo no sistema!")
+
+    if curriculo_existente:
+        c = curriculo_existente
+
+        #Cabeçalho principal
+        st.markdown("---")
+        st.header(c.get('nome', 'Sem Nome'))
+        st.caption(f"ID Interno: {c.get('id')} | Cadastrado em: {c.get('data_cadastro', 'Data N/A')}")
+        st.markdown("")  #Espaço extra
+
+        #--- LAYOUT MELHORADO (BLOCOS E ESPAÇAMENTO) ---
+        #Criamos 3 colunas: [Conteúdo 1] [Espaço vazio] [Conteúdo 2]
+        #A proporção [1, 0.1, 1] cria um pequeno gap no meio
+        col_resumo, gap, col_detalhes = st.columns([1, 0.1, 1])
+
+        #BLOCO DA ESQUERDA (resumo e formação)
+        with col_resumo:
+            with st.container(border=True):  #Cria a borda do "card"
+                st.subheader("🎓 Formação & Resumo")
+                st.markdown(f"**Formação:** {c.get('formacao', '')}")
+
+                st.markdown("### Resumo Profissional")
+                st.info(c.get('resumo', 'Sem resumo.'))
+
+                st.markdown("### Experiência")
+                st.write(c.get('experiencia', 'Não informada.'))
+
+        #BLOCO DA DIREITA (contato e skills)
+        with col_detalhes:
+            with st.container(border=True):  #Cria a borda do "card"
+                st.subheader("📞 Contatos")
+
+                st.markdown(f"**📧 Email:** {c.get('email')}")
+                st.markdown(f"**📞 Telefone:** {c.get('telefone')}")
+
+                st.divider()  #Linha divisória visual
+
+                st.markdown("### Competências")
+                #Helper para exibir listas bonitas
+                def show_list(label, items):
+                    if items and isinstance(items, list) and len(items) > 0 and items[0] != "":
+                        #Exibe como tags (code block inline) para ficar bonito e separado
+                        tags = " ".join([f"`{item}`" for item in items])
+                        st.markdown(f"**{label}:** {tags}")
+
+
+                show_list("🛠 Skills", c.get('skills', []))
+                show_list("🗣 Idiomas", c.get('idiomas', []))
+                show_list("🏅 Certificações", c.get('certificacoes', []))
+
+    else:
+        st.error("Erro: Seu ID consta no usuário, mas o currículo não foi achado. Contate o suporte.")
+
+    st.stop()  #Para aqui, não mostra o formulário de cadastro
+
+#--- TELA DE CADASTRO (admin ou candidato novo) ---
 st.title("👤 Cadastro de novo currículo")
-st.write("Preencha o formulário abaixo para adicionar um novo currículo ao banco de dados.")
+st.write("Preencha o formulário abaixo.")
 
 #Formulário
 with st.form(key="curriculo_form", clear_on_submit=True):
@@ -56,7 +137,7 @@ if submitted:
         st.error("⚠️ Por favor, preencha todos os campos obrigatórios.")
     else:
         try:
-            _, col_curriculos, _ = get_collections()
+            _, col_curriculos, col_usuarios = get_collections()
             if col_curriculos is None:
                 st.error("Não foi possível conectar à coleção de currículos.")
                 st.stop()
@@ -108,13 +189,21 @@ if submitted:
             }
 
             #Inserir no banco
-            result = col_curriculos.insert_one(novo_curriculo_doc)
+            #1. Insere Currículo
+            col_curriculos.insert_one(novo_curriculo_doc)
 
-            st.success(f"🎉 Currículo de '{nome}' (ID: {novo_id}) cadastrado com sucesso!")
-            st.info(f"ID do MongoDB: `{result.inserted_id}`")
+            #2. VINCULA AO USUÁRIO (se for candidato)
+            if tipo_usuario == 'candidato':
+                col_usuarios.update_one(
+                    {"email": st.session_state['email']},
+                    {"$set": {"id_curriculo": novo_id}}
+                )
+                #Atualiza a sessão local também para não precisar relogar
+                st.session_state['id_curriculo'] = novo_id
+
+            st.success(f"🎉 Currículo cadastrado! ID: {novo_id}")
             st.balloons()
-
-            st.cache_data.clear()
+            st.rerun()  #Recarrega para mostrar a tela de visualização
 
         except PyMongoError as e:
             st.error(f"Erro ao salvar no MongoDB: {e}")

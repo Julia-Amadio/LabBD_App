@@ -2,17 +2,30 @@ import streamlit as st
 import pandas as pd
 from db_connection import get_collections
 
+#--- CONTROLE DE ACESSO ---
+if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
+    st.warning("Por favor, faça login para acessar esta página.")
+    st.stop()
 
-#Carregamento de dados (agora do Mongo)
+tipo_usuario = st.session_state['tipo_usuario']
+
+#Regra: candidato não pode ver lista geral de currículos
+if tipo_usuario == 'candidato':
+    st.error("⛔ ACESSO RESTRITO: candidatos não têm permissão para visualizar o banco de talentos.")
+    st.info("Para ver seus dados, acesse a página 'Meu currículo'.")
+    st.stop()
+#--------------------------
+
+#Carregamento de dados
 @st.cache_data
 def load_curriculos_data():
-    """Carrega o DataFrame de currículos a partir do MongoDB Atlas."""
     _, col_curriculos, _ = get_collections()
     if col_curriculos is None:
         st.error("Não foi possível conectar à coleção de currículos.")
         return pd.DataFrame()
 
     try:
+        #Admin e empregador veem tudo
         cursor = col_curriculos.find()
         curriculos_list = list(cursor)
         df = pd.DataFrame(curriculos_list)
@@ -29,15 +42,6 @@ def load_curriculos_data():
         return pd.DataFrame()
 
 
-#Funções auxiliares
-def join_list_field(field):
-    if isinstance(field, list):
-        return ' '.join(field).lower()
-    elif isinstance(field, str):
-        return field.lower()
-    return ""
-
-
 def format_list_display(data_list):
     if isinstance(data_list, list) and data_list:
         return ", ".join(data_list)
@@ -46,15 +50,10 @@ def format_list_display(data_list):
     return "N/A"
 
 
-#"main()"
-st.set_page_config(
-    page_title="Banco de talentos",
-    page_icon="👥",
-    layout="wide"
-)
-
+#--- "main()" ---
+st.set_page_config(page_title="Banco de talentos", page_icon="👥", layout="wide")
 st.title("👥 Banco de talentos")
-st.markdown("Explore os perfis cadastrados no sistema.")
+st.markdown("Explore os currículos cadastrados no sistema.")
 
 if st.sidebar.button("🔄 Atualizar lista"):
     st.cache_data.clear()
@@ -72,19 +71,19 @@ search_query = st.sidebar.text_input("🔍 Buscar (Skill, Idioma, Formação)", 
 
 df_filtered = df_curriculos.copy()
 
+#Lógica de filtro Pandas (simplificada para brevidade)
 if search_query:
-    df_filtered['search_skills'] = df_filtered['skills'].apply(join_list_field)
-    df_filtered['search_idiomas'] = df_filtered['idiomas'].apply(join_list_field)
+    #Função lambda rápida para juntar listas
+    to_str = lambda x: ' '.join(x).lower() if isinstance(x, list) else str(x).lower()
 
-    df_filtered = df_filtered[
-        df_filtered['formacao'].str.lower().str.contains(search_query, na=False) |
-        df_filtered['experiencia'].str.lower().str.contains(search_query, na=False) |
-        df_filtered['search_skills'].str.contains(search_query, na=False) |
-        df_filtered['search_idiomas'].str.contains(search_query, na=False)
-        ]
+    mask = (
+            df_filtered['formacao'].apply(to_str).str.contains(search_query) |
+            df_filtered['skills'].apply(to_str).str.contains(search_query) |
+            df_filtered['idiomas'].apply(to_str).str.contains(search_query)
+    )
+    df_filtered = df_filtered[mask]
 
-#KPI Simples
-st.metric("Candidatos Encontrados", len(df_filtered))
+st.metric("Candidatos encontrados", len(df_filtered))
 st.markdown("---")
 
 if df_filtered.empty:

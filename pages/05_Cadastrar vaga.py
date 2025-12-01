@@ -3,12 +3,21 @@ from db_connection import get_collections, create_embedding
 from pymongo.errors import PyMongoError
 import datetime
 
+#------- CONTROLE DE ACESSO -------
+if 'logged_in' not in st.session_state or not st.session_state['logged_in']:
+    st.warning("Faça login.")
+    st.stop()
+
+tipo_usuario = st.session_state['tipo_usuario']
+empresa_usuario = st.session_state.get('empresa')
+
+if tipo_usuario == 'candidato':
+    st.error("⛔ ACESSO RESTRITO: candidatos não podem cadastrar vagas!")
+    st.stop()
+#----------------------------------
+
 #Configuração da página
-st.set_page_config(
-    page_title="Cadastro de Vagas",
-    page_icon="🚀",
-    layout="wide"
-)
+st.set_page_config(page_title="Cadastro de Vagas", page_icon="🚀", layout="wide")
 
 st.title("🚀 Cadastro de nova vaga")
 st.write("Preencha o formulário abaixo para adicionar uma nova vaga ao banco de dados.")
@@ -26,7 +35,11 @@ with st.form(key="vaga_form", clear_on_submit=True):
     col1, col2 = st.columns(2)
     with col1:
         titulo = st.text_input("**Título da vaga**", placeholder="Ex: Engenheiro de Software Sênior")
-        empresa = st.text_input("**Empresa**", placeholder="Ex: Google")
+        #Se logado como empregador, o campo vem preenchido e desabilitado
+        #Se for Admin, o campo é livre
+        val_empresa = empresa_usuario if tipo_usuario == 'empregador' else ""
+        disable_empresa = True if tipo_usuario == 'empregador' else False
+        empresa = st.text_input("**Empresa**", value=val_empresa, disabled=disable_empresa)
         salario = st.number_input("**Salário (R$)**", min_value=0.0, step=100.0, format="%.2f")
     with col2:
         cidade = st.text_input("**Cidade**", placeholder="Ex: São Paulo")
@@ -46,6 +59,10 @@ with st.form(key="vaga_form", clear_on_submit=True):
 
 #Lógica de salvamento
 if submitted:
+    #Se for empregador, garante que a empresa usada é a dele mesmo se tentar algum bypassing
+    if tipo_usuario == 'empregador':
+        empresa = empresa_usuario
+
     #Validação
     if not all([titulo, empresa, tipo_contratacao, skills_input, cidade, estado, descricao]):
         st.error("⚠️ Por favor, preencha todos os campos obrigatórios.")

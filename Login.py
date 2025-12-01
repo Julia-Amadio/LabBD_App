@@ -49,7 +49,6 @@ def logout():
 #--- Interface ---
 if st.session_state['logged_in']:
     #Sidebar com informações do usuário logado
-    st.sidebar.divider()
     st.sidebar.write(f"👤 **{st.session_state['email']}**")
     st.sidebar.caption(f"Perfil: {st.session_state['tipo_usuario'].upper()}")
 
@@ -61,20 +60,20 @@ if st.session_state['logged_in']:
     #Mensagem personalizada por tipo
     tipo = st.session_state['tipo_usuario']
     if tipo == 'empregador':
-        empresa = st.session_state.get('empresa', 'Sua Empresa')
-        st.success(f"Painel corporativo: **{empresa}**")
+        empresa = st.session_state.get('empresa', 'Sua empresa')
+        st.success(f"Você está logado em sua conta corporativa da empresa **{empresa}**")
         st.write("Utilize o menu lateral para **Cadastrar vagas** ou **Listar currículos**.")
 
     elif tipo == 'candidato':
-        st.info("Painel do Candidato")
+        st.info("Você está logado como **Candidato**.")
         if st.session_state['id_curriculo']:
             st.write("✅ Você já possui um currículo cadastrado.")
         else:
             st.warning("⚠️ Você ainda não cadastrou seu currículo. Vá em **Cadastrar currículo** para começar.")
 
     elif tipo == 'admin':
-        st.error("🔧 Modo ADMIN ativado!")
-        st.write("Você tem acesso irrestrito a todas as funções.")
+        st.error("🔧 **Modo ADMIN ativado!**")
+        st.write("Você tem acesso irrestrito a **todas** as funções.")
 
 else:
     st.title("Login do sistema 🔑")

@@ -90,8 +90,8 @@ def get_collections():
         return db[COL_VAGAS], db[COL_CURRICULOS], db[COL_USUARIOS]
     return None, None, None
 
-# --- Função de Pesquisa RAG (Retrieval) ---
-# Vetoriza a consulta do usuário e usa o Atlas Vector Search
+#--- Função de Pesquisa RAG (Retrieval) ---
+#Vetoriza a consulta e usa o Atlas Vector Search
 def search_rag(
     user_query: str,
     target_collection: Literal["vagas", "curriculos"],
@@ -114,12 +114,12 @@ def search_rag(
         print("Coleção alvo inválida.")
         return []
 
-    # Gera embedding da pergunta
+    #Gera embedding da pergunta
     query_vector = create_embedding(user_query)
     if query_vector is None:
         return []
 
-    # Vector Search
+    #Vector Search
     aggregation_pipeline = [
         {
             "$vectorSearch": {
